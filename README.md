@@ -4,13 +4,20 @@ Simulador de sistemas de controle e sistemas físicos para estudantes de engenha
 
 ## Estado atual
 
-Fases 0 a 2 do plano (Documento Mestre):
+Fases 0 a 2 do plano (Documento Mestre), mais uma biblioteca de processos industriais e empresariais:
 
-- Editor visual de diagrama de blocos com símbolos no estilo dos livros de controle.
-- Fontes (constante, entrada manual, degrau, rampa, senoide, onda quadrada), operadores (somador, ganho, integrador, derivador filtrado), controle (função de transferência, espaço de estados, PID com anti-windup), não linearidades (saturação, zona morta) e Scope.
+- **Páginas separadas**: Montagem (quadro com o máximo de espaço), Dashboard, Gráficos, Tabelas e Indicadores. A biblioteca e o painel da direita (Propriedades e Simulação) recolhem e expandem.
+- Editor visual de diagrama de blocos com símbolos no estilo dos livros de controle. Atalhos: Ctrl+Z/Y, Ctrl+C/V, Ctrl+D (duplicar), Ctrl+A, Delete; anotações de texto no quadro; duplo clique abre as propriedades.
+- Fontes, operadores (somador, ganho, produto, raiz, módulo, integrador, derivador filtrado), controle (função de transferência, espaço de estados, PID com anti-windup, atraso de 1ª ordem, tempo morto), não linearidades (saturação, zona morta, integrador limitado) e Scope.
+- **Processos industriais**: tanque (nível), válvula, bomba, resistência, tanque aquecido (temperatura) e caldeira (nível, temperatura e vapor).
+- **Empresarial**: estoque, fila de atendimento e caixa.
+- **Situações prontas** (aba Situações): controle de nível, temperatura em tanque aquecido, caldeira, dois tanques, bomba com vazamento, estoque com atraso de produção, fila de atendimento, além de 1ª ordem e malha com PID.
+- Unidade de tempo selecionável (s, min, h, dias) para os rótulos; os blocos de processo usam segundos nas equações.
 - Motor numérico próprio: Euler, RK4 e RK45 (Dormand-Prince adaptativo), com tratamento exato de descontinuidades e detecção de laço algébrico.
 - Edição ao vivo: mudar um parâmetro com a simulação rodando continua do estado atual e marca o instante no gráfico.
-- Gráficos, instrumentos, tabelas, indicadores de resposta ao degrau (ultrapassagem, subida, acomodação), exportação CSV, salvar e abrir projeto em arquivo JSON.
+- Gráficos agrupados por unidade, instrumentos, tabelas, indicadores de resposta ao degrau, exportação CSV, salvar e abrir projeto em arquivo JSON.
+
+Limitações conhecidas: o tempo morto usa aproximação de Padé (resposta inversa inicial esperada); ainda não há controlador liga/desliga com histerese; os valores das situações são ilustrativos.
 
 Mecânico, elétrico e eletromecânico entram nas fases seguintes.
 

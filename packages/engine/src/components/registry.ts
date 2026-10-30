@@ -27,7 +27,7 @@ export interface BlockImpl {
   minTimescale?(): number;
 }
 
-export type CategoryId = "sources" | "math" | "control" | "nonlinear" | "sinks" | "mech" | "rot" | "elec" | "electromech";
+export type CategoryId = "sources" | "math" | "control" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech";
 
 export interface ComponentDef {
   type: string;
@@ -55,6 +55,9 @@ export const CATEGORIES: { id: CategoryId; label: string; available: boolean }[]
   { id: "control", label: "Controle", available: true },
   { id: "nonlinear", label: "Não linearidades", available: true },
   { id: "sinks", label: "Saídas e medição", available: true },
+  { id: "process", label: "Processos industriais", available: true },
+  { id: "business", label: "Empresarial", available: true },
+  { id: "notes", label: "Anotações", available: true },
   { id: "mech", label: "Mecânico, translação", available: true },
   { id: "rot", label: "Mecânico, rotação", available: true },
   { id: "elec", label: "Elétrico", available: true },

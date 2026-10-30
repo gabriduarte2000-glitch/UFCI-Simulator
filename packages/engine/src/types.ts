@@ -16,6 +16,10 @@ export interface PortDef {
   dir: PortDir;
   /** Entrada que pode ficar sem fio. */
   optional?: boolean;
+  /** Unidade da grandeza que passa pela porta (exibida em tabelas e instrumentos). */
+  unit?: string;
+  /** Rótulo curto mostrado no símbolo, ao lado da porta. */
+  short?: string;
 }
 
 export type ParamKind = "number" | "int" | "bool" | "select" | "text";
@@ -74,6 +78,8 @@ export interface SimConfig {
   atol: number;
   /** Passo máximo para o rk45. Se ausente, o motor escolhe. */
   maxStep?: number;
+  /** Unidade de tempo mostrada na interface. Não altera o cálculo. */
+  timeUnit?: "s" | "min" | "h" | "dia";
 }
 
 export interface ProjectIR {

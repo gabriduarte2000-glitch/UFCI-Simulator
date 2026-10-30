@@ -1,33 +1,48 @@
 import { create } from "zustand";
 
-export type BottomTab = "dashboard" | "graficos" | "tabelas" | "indicadores";
+export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores";
+/** Como os sinais escolhidos se distribuem nos gráficos. */
+export type ChartMode = "unit" | "each" | "all";
+export type RightTab = "props" | "sim";
 
 interface Ui {
+  page: Page;
+  leftOpen: boolean;
+  rightOpen: boolean;
+  rightTab: RightTab;
   showWireValues: boolean;
   snap: boolean;
   tool: "select" | "pan";
-  bottomTab: BottomTab;
-  bottomOpen: boolean;
   chartSignal: number[];
+  chartMode: ChartMode;
+  setPage(p: Page): void;
+  setLeftOpen(v: boolean): void;
+  setRightOpen(v: boolean): void;
+  openRight(tab: RightTab): void;
   setShowWireValues(v: boolean): void;
   setSnap(v: boolean): void;
   setTool(t: "select" | "pan"): void;
-  setBottomTab(t: BottomTab): void;
-  setBottomOpen(v: boolean): void;
   setChartSignal(ids: number[]): void;
+  setChartMode(m: ChartMode): void;
 }
 
 export const useUi = create<Ui>((set) => ({
+  page: "montagem",
+  leftOpen: true,
+  rightOpen: false,
+  rightTab: "props",
   showWireValues: true,
   snap: true,
   tool: "select",
-  bottomTab: "dashboard",
-  bottomOpen: true,
   chartSignal: [],
+  chartMode: "unit",
+  setPage: (page) => set({ page }),
+  setLeftOpen: (leftOpen) => set({ leftOpen }),
+  setRightOpen: (rightOpen) => set({ rightOpen }),
+  openRight: (rightTab) => set({ rightOpen: true, rightTab }),
   setShowWireValues: (v) => set({ showWireValues: v }),
   setSnap: (v) => set({ snap: v }),
   setTool: (t) => set({ tool: t }),
-  setBottomTab: (t) => set({ bottomTab: t }),
-  setBottomOpen: (v) => set({ bottomOpen: v }),
   setChartSignal: (ids) => set({ chartSignal: ids }),
+  setChartMode: (chartMode) => set({ chartMode }),
 }));

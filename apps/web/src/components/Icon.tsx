@@ -25,6 +25,17 @@ const P: Record<string, string> = {
   copy: "M8 8h11v12H8zM5 16V4h11",
   info: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5v.5",
   close: "M6 6l12 12M18 6L6 18",
+  panelLeft: "M4 5h16v14H4zM9 5v14M15 10l-2 2 2 2",
+  panelRight: "M4 5h16v14H4zM15 5v14M9 10l2 2-2 2",
+  note: "M5 4h14v11l-5 5H5zM14 20v-5h5",
+  duplicate: "M8 8h11v12H8zM5 16V4h11",
+  help: "M12 21a9 9 0 100-18 9 9 0 000 18zM9.5 9.5a2.5 2.5 0 115 0c0 1.8-2.5 2-2.5 4M12 17v.5",
+  sliders: "M5 6h14M5 12h14M5 18h14M9 4v4M15 10v4M8 16v4",
+  dash: "M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z",
+  chartLine: "M4 4v16h16M7 15l4-5 3 3 5-7",
+  table: "M4 5h16v14H4zM4 10h16M4 15h16M10 5v14",
+  gauge: "M4 17a8 8 0 1116 0M12 17l4-6",
+  build: "M4 6h6v5H4zM14 13h6v5h-6zM10 8.5h2.5a1.5 1.5 0 011.5 1.5v3",
   book: "M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h10",
 };
 

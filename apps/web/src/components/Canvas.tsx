@@ -12,7 +12,9 @@ import {
   type NodeChange,
   type OnConnectEnd,
 } from "@xyflow/react";
-import { checkPortPair, EXAMPLES, getDef, portsOf } from "@ufci/engine";
+import { checkPortPair, getDef, portsOf, SITUATIONS } from "@ufci/engine";
+import { nodeSize } from "./Symbols";
+import { loadSituation } from "../loadSituation";
 import { onProjectEvent, useProject } from "../store";
 import { useDiag, INCOMPLETE_CODES } from "../diagnostics";
 import { useLive } from "../live";
@@ -69,13 +71,20 @@ function Inner() {
 
   const nodes: BlockNodeT[] = useMemo(
     () =>
-      project.components.map((c) => ({
+      project.components.map((c) => {
+        const def = getDef(c.type);
+        const sz = def ? nodeSize(def.symbol, c.params) : { w: 90, h: 56 };
+        // Tamanho inicial: o minimapa só desenha nós que têm dimensões conhecidas.
+        return {
         id: c.id,
+        initialWidth: sz.w,
+        initialHeight: sz.h,
         type: "block" as const,
         position: project.layout?.positions[c.id] ?? { x: 0, y: 0 },
         selected: selectedNodes.includes(c.id),
         data: { type: c.type, label: c.label ?? c.id, params: c.params, flag: flags.nodes.get(c.id) },
-      })),
+        };
+      }),
     [project.components, project.layout, selectedNodes, flags.nodes],
   );
 
@@ -182,6 +191,7 @@ function Inner() {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable)) return;
+      if (useUi.getState().page !== "montagem") return;
       const mod = e.ctrlKey || e.metaKey;
       const st = useProject.getState();
       if (mod && e.key.toLowerCase() === "z") {
@@ -193,6 +203,10 @@ function Inner() {
       } else if (mod && e.key.toLowerCase() === "c") st.copy();
       else if (mod && e.key.toLowerCase() === "v") {
         e.preventDefault();
+        st.paste();
+      } else if (mod && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        st.copy();
         st.paste();
       } else if (mod && e.key.toLowerCase() === "a") {
         e.preventDefault();
@@ -234,6 +248,7 @@ function Inner() {
         onConnectEnd={onConnectEnd}
         isValidConnection={isValid}
         onNodeDragStart={() => useProject.getState().pushHistory()}
+        onNodeDoubleClick={() => useUi.getState().openRight("props")}
         connectionMode={ConnectionMode.Loose}
         snapToGrid={snap}
         snapGrid={[20, 20]}
@@ -246,23 +261,24 @@ function Inner() {
         panOnDrag={tool === "pan" ? true : [1, 2]}
         panOnScroll={false}
         zoomOnScroll
+        zoomOnDoubleClick={false}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{ type: "wire" }}
         defaultViewport={{ x: 40, y: 40, zoom: 1 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1.4} color="#b9c6da" />
-        <MiniMap pannable zoomable className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />
+        <MiniMap pannable zoomable style={{ width: 150, height: 100 }} className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />
       </ReactFlow>
       <CanvasToolbar />
       <DiagnosticsPanel />
       {empty && (
         <div className="empty-hint">
           <h2>Comece o seu sistema</h2>
-          <p>Arraste um componente da biblioteca para cá e ligue as portas com fios. Ou abra um exemplo pronto:</p>
+          <p>Arraste um componente da biblioteca para cá e ligue as portas com fios. Ou abra uma situação pronta (tanque, caldeira, estoque...):</p>
           <div className="empty-actions">
-            {EXAMPLES.map((ex) => (
-              <button key={ex.id} className="btn" onClick={() => useProject.getState().replaceProject(ex.make())}>
-                {ex.title}
+            {SITUATIONS.filter((x) => ["tank-level", "boiler", "inventory", "pid-loop"].includes(x.id)).map((x) => (
+              <button key={x.id} className="btn" onClick={() => loadSituation(x)}>
+                {x.title}
               </button>
             ))}
           </div>

@@ -205,7 +205,7 @@ export function compile(project: ProjectIR): CompileResult {
           id: `${ci.inst.id}.${p.name}`,
           componentId: ci.inst.id,
           label: `${ci.inst.label ?? ci.def.label} · ${p.label}`,
-          unit: "",
+          unit: p.unit ?? "",
           kind: "port",
         });
       }

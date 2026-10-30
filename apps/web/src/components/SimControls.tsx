@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { SolverId } from "@ufci/engine";
 import { useLive, sim } from "../live";
 import { useProject } from "../store";
 import { fmtNum } from "../util";
 import { Icon } from "./Icon";
+import { LiveInputs } from "./LiveInputs";
+import { useTimeUnit, TIME_UNITS } from "../timeunit";
 
 const SPEEDS: { v: number; label: string }[] = [
   { v: 0.25, label: "0,25×" },
@@ -14,35 +16,11 @@ const SPEEDS: { v: number; label: string }[] = [
   { v: 1000, label: "Máxima" },
 ];
 
-function ManualInputs() {
-  const all = useProject((s) => s.project.components);
-  const comps = useMemo(() => all.filter((c) => c.type === "signal.manual"), [all]);
-  const set = useProject((s) => s.setParam);
-  if (!comps.length) return null;
-  return (
-    <div className="manuals">
-      <div className="card-title">Entradas ao vivo</div>
-      {comps.map((c) => {
-        const lo = Number(c.params.min?.value ?? -1),
-          hi = Number(c.params.max?.value ?? 1),
-          v = Number(c.params.value?.value ?? 0);
-        return (
-          <label key={c.id} className="manual">
-            <span>
-              {c.label} <b>{fmtNum(v, 3)}</b>
-            </span>
-            <input type="range" className="slider" min={lo} max={hi} step={(hi - lo) / 200} value={Math.min(hi, Math.max(lo, v))} onChange={(e) => set(c.id, "value", Number(e.target.value))} />
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
 function Config() {
+  const unit = useTimeUnit();
   const sc = useProject((s) => s.project.simulation);
   const setSim = useProject((s) => s.setSim);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const num = (key: "t0" | "tf" | "h" | "rtol" | "atol", label: string, unit?: string) => (
     <label className="cfg-row" key={key}>
       <span>
@@ -79,11 +57,21 @@ function Config() {
               <option value="euler">Euler (didático)</option>
             </select>
           </label>
-          {num("t0", "Início", "s")}
-          {num("tf", "Fim", "s")}
-          {sc.solver !== "rk45" ? num("h", "Passo", "s") : num("rtol", "Tolerância relativa")}
+          <label className="cfg-row">
+            <span>Unidade de tempo</span>
+            <select className="input" value={unit} onChange={(e) => setSim({ timeUnit: e.target.value as "s" | "min" | "h" | "dia" })}>
+              {TIME_UNITS.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {num("t0", "Início", unit)}
+          {num("tf", "Fim", unit)}
+          {sc.solver !== "rk45" ? num("h", "Passo", unit) : num("rtol", "Tolerância relativa")}
           {sc.solver === "rk45" && num("atol", "Tolerância absoluta")}
-          <small className="hint">Mudar a configuração reinicia a simulação.</small>
+          <small className="hint">Mudar a configuração reinicia a simulação. A unidade de tempo só muda os rótulos: os blocos de processo usam segundos nas suas equações.</small>
         </div>
       )}
     </div>
@@ -91,6 +79,7 @@ function Config() {
 }
 
 export function SimControls() {
+  const unit = useTimeUnit();
   const status = useLive((s) => s.status);
   const t = useLive((s) => s.t);
   const t0 = useLive((s) => s.t0);
@@ -121,15 +110,15 @@ export function SimControls() {
         <div className="time-row">
           <span>Tempo de simulação</span>
           <b>
-            {fmtNum(status === "idle" ? start : t, 4)} s
+            {fmtNum(status === "idle" ? start : t, 4)} {unit}
           </b>
         </div>
         <div className="progress" role="progressbar" aria-valuemin={start} aria-valuemax={end} aria-valuenow={t}>
           <div style={{ width: `${pct}%` }} />
         </div>
         <div className="time-ends">
-          <span>{fmtNum(start)} s</span>
-          <span>{fmtNum(end)} s</span>
+          <span>{fmtNum(start)} {unit}</span>
+          <span>{fmtNum(end)} {unit}</span>
         </div>
       </div>
       <label className="cfg-row speed">
@@ -143,7 +132,7 @@ export function SimControls() {
         </select>
       </label>
       <small className="hint">A velocidade só muda o ritmo na tela. O resultado numérico é o mesmo.</small>
-      <ManualInputs />
+      <LiveInputs />
       <Config />
       {!canPause && status === "finished" && <small className="hint ok">Simulação concluída. Clique em Reiniciar para rodar de novo.</small>}
     </section>

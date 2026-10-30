@@ -65,6 +65,8 @@ function NumberField({ pd, value, onCommit }: { pd: ParamDef; value: number; onC
 function TextField({ pd, value, onCommit }: { pd: ParamDef; value: string; onCommit: (v: string) => void }) {
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
+  if (pd.key === "text")
+    return <textarea className="input note-input" rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft !== value && onCommit(draft)} aria-label={pd.label} />;
   return (
     <input
       className="input"

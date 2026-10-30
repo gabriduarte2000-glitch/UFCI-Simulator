@@ -7,7 +7,7 @@ import type { ProjectIR } from "./types";
 
 type P = Record<string, number | string | boolean>;
 
-function build(
+export function build(
   name: string,
   comps: { id: string; type: string; label?: string; params?: P; pos: [number, number] }[],
   conns: [string, string, string, string][],

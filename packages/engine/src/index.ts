@@ -9,3 +9,4 @@ export * from "./examples";
 export { allDefs, getDef, CATEGORIES, newComponent, portsOf, defaultParams } from "./components/registry";
 export type { ComponentDef, CategoryId } from "./components/registry";
 export { SolverError } from "./solvers";
+export * from "./situations";

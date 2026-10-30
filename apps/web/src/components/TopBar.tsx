@@ -3,6 +3,16 @@ import { useProject } from "../store";
 import { useLive, sim } from "../live";
 import { download, fmtNum, projectToFile, safeName } from "../util";
 import { Icon } from "./Icon";
+import { useUi, type Page } from "../ui";
+import { useTimeUnit } from "../timeunit";
+
+const PAGES: { id: Page; label: string; icon: string }[] = [
+  { id: "montagem", label: "Montagem", icon: "build" },
+  { id: "dashboard", label: "Dashboard", icon: "dash" },
+  { id: "graficos", label: "Gráficos", icon: "chartLine" },
+  { id: "tabelas", label: "Tabelas", icon: "table" },
+  { id: "indicadores", label: "Indicadores", icon: "gauge" },
+];
 
 export function TopBar() {
   const name = useProject((s) => s.project.meta.name);
@@ -10,6 +20,9 @@ export function TopBar() {
   const t = useLive((s) => s.t);
   const file = useRef<HTMLInputElement>(null);
   const running = status === "running";
+  const page = useUi((s) => s.page);
+  const setPage = useUi((s) => s.setPage);
+  const unit = useTimeUnit();
 
   const confirmReplace = () => {
     const st = useProject.getState();
@@ -25,22 +38,29 @@ export function TopBar() {
         </svg>
         <div>
           <div className="brand-name">UFCI Simulator</div>
-          <div className="brand-sub">Simulador de sistemas de controle e físicos</div>
+          <div className="brand-sub">Controle e sistemas físicos</div>
         </div>
       </div>
+      <nav className="page-nav" aria-label="Páginas">
+        {PAGES.map((p) => (
+          <button key={p.id} className={page === p.id ? "on" : ""} aria-current={page === p.id ? "page" : undefined} onClick={() => setPage(p.id)}>
+            <Icon name={p.icon} size={15} /> <span>{p.label}</span>
+          </button>
+        ))}
+      </nav>
       <label className="project-name">
         <span>Projeto:</span>
         <input value={name} onChange={(e) => useProject.getState().setName(e.target.value)} aria-label="Nome do projeto" />
       </label>
       <div className="top-actions">
-        <button className="btn" onClick={() => confirmReplace() && useProject.getState().newProject()}>
-          <Icon name="file" /> Novo
+        <button className="btn" title="Novo projeto" onClick={() => confirmReplace() && useProject.getState().newProject()}>
+          <Icon name="file" /> <span className="lbl">Novo</span>
         </button>
-        <button className="btn" onClick={() => file.current?.click()}>
-          <Icon name="open" /> Abrir
+        <button className="btn" title="Abrir arquivo de projeto" onClick={() => file.current?.click()}>
+          <Icon name="open" /> <span className="lbl">Abrir</span>
         </button>
         <button className="btn" onClick={() => download(`${safeName(name)}.ufci.json`, projectToFile(useProject.getState().project))} title="Baixa o projeto como arquivo. Guarde uma cópia: é o seu backup.">
-          <Icon name="save" /> Salvar
+          <Icon name="save" /> <span className="lbl">Salvar</span>
         </button>
         <input
           ref={file}
@@ -64,7 +84,7 @@ export function TopBar() {
           <Icon name="stop" />
         </button>
         <div className="time-chip" aria-live="off">
-          Tempo: {fmtNum(t, 4)} s
+          Tempo: {fmtNum(t, 4)} {unit}
         </div>
       </div>
     </header>

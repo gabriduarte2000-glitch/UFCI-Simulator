@@ -2,6 +2,7 @@ import { useLive } from "../live";
 import { useProject } from "../store";
 import { useDiag } from "../diagnostics";
 import { fmtNum } from "../util";
+import { useTimeUnit } from "../timeunit";
 
 const TXT = { idle: "Pronto", running: "Simulação em execução", paused: "Simulação pausada", finished: "Simulação concluída", error: "Erro na simulação" } as const;
 
@@ -13,6 +14,7 @@ export function StatusBar() {
   const solver = useProject((s) => s.project.simulation.solver);
   const projTf = useProject((s) => s.project.simulation.tf);
   const diag = useDiag((s) => s.list);
+  const unit = useTimeUnit();
   const errs = diag.filter((d) => d.severity === "error").length;
   return (
     <footer className="statusbar">
@@ -22,7 +24,7 @@ export function StatusBar() {
       <span>Método: {solver === "rk45" ? "RK45" : solver === "rk4" ? "RK4" : "Euler"}</span>
       <span className="sep" />
       <span>
-        Tempo: {fmtNum(t, 4)} s / {fmtNum(status === "idle" ? projTf : tf)} s
+        Tempo: {fmtNum(t, 4)} {unit} / {fmtNum(status === "idle" ? projTf : tf)} {unit}
       </span>
       {steps > 0 && (
         <>

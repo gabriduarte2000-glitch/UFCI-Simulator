@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { allDefs, CATEGORIES, defaultParams, EXAMPLES, type ComponentDef } from "@ufci/engine";
-import { useProject } from "../store";
+import { allDefs, CATEGORIES, defaultParams, SITUATIONS, SITUATION_GROUPS, type ComponentDef } from "@ufci/engine";
+import { loadSituation } from "../loadSituation";
+import { useUi } from "../ui";
 import { useAddAtCenter } from "./Canvas";
 import { Icon } from "./Icon";
 import { nodeSize, SymbolArt } from "./Symbols";
@@ -23,7 +24,8 @@ const SOON: Record<string, string[]> = {
 };
 
 export function Library() {
-  const [tab, setTab] = useState<"comp" | "ex">("comp");
+  const [tab, setTab] = useState<"comp" | "sit">("comp");
+  const setLeftOpen = useUi((s) => s.setLeftOpen);
   const [q, setQ] = useState("");
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   const add = useAddAtCenter();
@@ -37,8 +39,11 @@ export function Library() {
         <button className={tab === "comp" ? "on" : ""} onClick={() => setTab("comp")}>
           Componentes
         </button>
-        <button className={tab === "ex" ? "on" : ""} onClick={() => setTab("ex")}>
-          Exemplos
+        <button className={tab === "sit" ? "on" : ""} onClick={() => setTab("sit")}>
+          Situações
+        </button>
+        <button className="collapse-btn" onClick={() => setLeftOpen(false)} title="Recolher a biblioteca" aria-label="Recolher a biblioteca">
+          <Icon name="panelLeft" />
         </button>
       </div>
       {tab === "comp" ? (
@@ -101,11 +106,19 @@ export function Library() {
         </>
       ) : (
         <div className="lib-scroll examples">
-          {EXAMPLES.map((ex) => (
-            <button key={ex.id} className="example-card" onClick={() => useProject.getState().replaceProject(ex.make())}>
-              <strong>{ex.title}</strong>
-              <span>{ex.description}</span>
-            </button>
+          {SITUATION_GROUPS.map((g) => (
+            <section key={g.id}>
+              <div className="cat-head static">
+                <span>{g.label}</span>
+              </div>
+              {SITUATIONS.filter((x) => x.group === g.id).map((x) => (
+                <button key={x.id} className="example-card" onClick={() => loadSituation(x)}>
+                  <strong>{x.title}</strong>
+                  <span>{x.description}</span>
+                  <em>Explore: {x.explore}</em>
+                </button>
+              ))}
+            </section>
           ))}
         </div>
       )}

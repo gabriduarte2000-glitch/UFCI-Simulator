@@ -23,7 +23,10 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   const outs = ports.filter((p) => p.dir === "out");
   const signs = def.symbol === "sum" ? String(data.params.signs?.value ?? "+-") : "";
   const place = (i: number, n: number) => (n === 1 ? h / 2 : def.symbol === "sum" ? 8 + (i * (h - 16)) / (n - 1) : 12 + (i * (h - 24)) / (n - 1));
-  const cls = ["block-node", selected ? "selected" : "", data.flag ? `flag-${data.flag}` : ""].join(" ");
+  const hasShort = ports.some((p) => p.short);
+  const portTip = (p: { label: string; unit?: string }) => p.label + (p.unit ? ` (${p.unit})` : "");
+  const isNote = def.symbol === "note";
+  const cls = ["block-node", isNote ? "is-note" : "", selected ? "selected" : "", data.flag ? `flag-${data.flag}` : ""].join(" ");
   return (
     <div className={cls} style={{ width: w, height: h }} title={def.description}>
       <svg width={w} height={h} className="block-art">
@@ -35,15 +38,29 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
       {outs.map((p, i) => (
         <Handle key={p.name} id={p.name} type="source" position={Position.Right} style={{ top: place(i, outs.length) }} className="port port-signal" />
       ))}
-      {ins.length > 1 &&
+      {hasShort &&
+        ins.map((p, i) => (
+          <span key={p.name} className="port-short in" style={{ top: place(i, ins.length) - 7 }} title={portTip(p)}>
+            {p.short}
+          </span>
+        ))}
+      {hasShort &&
+        outs.map((p, i) => (
+          <span key={p.name} className="port-short out" style={{ top: place(i, outs.length) - 7 }} title={portTip(p)}>
+            {p.short}
+          </span>
+        ))}
+      {!hasShort && ins.length > 1 &&
         ins.map((p, i) => (
           <span key={p.name} className="port-label" style={{ top: place(i, ins.length) - 7, left: def.symbol === "sum" ? -22 : 5 }}>
             {def.symbol === "sum" ? (signs[i] === "-" ? "−" : "+") : i + 1}
           </span>
         ))}
-      <div className="node-title" style={{ top: h + 5 }}>
-        {data.label}
-      </div>
+      {!isNote && (
+        <div className="node-title" style={{ top: h + 5 }}>
+          {data.label}
+        </div>
+      )}
     </div>
   );
 }
