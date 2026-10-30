@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildFromSpec, compile, emptyProject, newComponent, parseActions, patchProject, suggestFixes } from "../src";
+import { buildFromSpec, compile, emptyProject, newComponent, parseActions, patchProject, suggestFixes, type SpecComp, type SpecWire } from "../src";
 
-const rc = {
+const rc: { components: SpecComp[]; connections: SpecWire[] } = {
   components: [
     { id: "u", type: "signal.step", label: "Degrau", params: { v1: 5, t_step: 0 } },
     { id: "v", type: "elec.vsource", label: "Fonte" },
