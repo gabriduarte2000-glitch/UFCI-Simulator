@@ -2,9 +2,10 @@
 // Todos os números são ilustrativos. O objetivo é mostrar o comportamento, não representar uma planta real.
 
 import { build, exampleFirstOrder, examplePidLoop } from "./examples";
+import { dcMotorLoad, flexibleShaft, geared, massSpringDamper, positionServo, quarterCar, rcFilters, rlcSeries } from "./situations-phys";
 import type { ProjectIR } from "./types";
 
-export type SituationGroup = "basic" | "industry" | "business";
+export type SituationGroup = "basic" | "industry" | "business" | "mech" | "elec" | "electromech";
 
 export interface Situation {
   id: string;
@@ -245,6 +246,14 @@ function queue(): ProjectIR {
 }
 
 export const SITUATIONS: Situation[] = [
+  { id: "msd", group: "mech", title: "Massa, mola e amortecedor", description: "A força em degrau empurra a massa, presa a uma mola e a um amortecedor.", explore: "Aumente o amortecimento c até 20 (crítico) e veja a oscilação sumir. A posição final é F/k.", make: massSpringDamper },
+  { id: "quarter-car", group: "mech", title: "Suspensão de um quarto de carro", description: "Pneu, roda, mola, amortecedor e chassi passando por um degrau de 10 cm na pista.", explore: "Reduza o amortecedor e veja o chassi balançar mais.", make: quarterCar },
+  { id: "flex-shaft", group: "mech", title: "Eixo flexível com dois volantes", description: "Torque em degrau no volante 1, transmitido por um eixo torcional ao volante 2.", explore: "Reduza o amortecimento do eixo e veja as duas velocidades oscilarem em oposição.", make: flexibleShaft },
+  { id: "rlc", group: "elec", title: "Circuito RLC série", description: "Degrau de 10 V em um resistor, um indutor e um capacitor em série.", explore: "Aumente R até 20 Ω (amortecimento crítico) e veja a ultrapassagem sumir.", make: rlcSeries },
+  { id: "rc-filters", group: "elec", title: "Filtros RC: passa-baixa e passa-alta", description: "O mesmo sinal senoidal passa por dois filtros com frequência de corte de cerca de 1,6 Hz.", explore: "Mude a frequência do sinal e compare quanto cada filtro deixa passar.", make: rcFilters },
+  { id: "dc-motor", group: "electromech", title: "Motor CC com carga", description: "Degrau de 12 V em um motor com carga inercial. Você aplica torque de carga com o controle deslizante.", explore: "Aplique torque de carga e veja a velocidade cair e a corrente subir.", make: dcMotorLoad },
+  { id: "servo", group: "electromech", title: "Servo de posição com PID", description: "O PID ajusta a tensão do motor para levar o eixo a 1 rad.", explore: "Aplique torque de carga e mude Ki para ver o erro ser eliminado.", make: positionServo },
+  { id: "geared-motor", group: "electromech", title: "Motor com redutor de engrenagens", description: "Redutor 10:1 entre o motor e uma carga pesada com atrito.", explore: "Mude a relação N e compare a velocidade do motor com a da carga.", make: geared },
   { id: "first-order", group: "basic", title: "Resposta de 1ª ordem", description: "Degrau aplicado a G(s) = 1/(s+1).", explore: "Troque a constante de tempo e veja o tempo de subida mudar.", make: exampleFirstOrder },
   { id: "pid-loop", group: "basic", title: "Malha fechada com PID", description: "PID controlando uma planta de 2ª ordem.", explore: "Mude Kp, Ki e Kd com a simulação rodando.", make: examplePidLoop },
   { id: "tank-level", group: "industry", title: "Controle de nível de tanque", description: "Válvula de entrada, tanque com saída por gravidade e transmissor de nível.", explore: "Aumente o consumo com o controle deslizante e veja a válvula compensar.", make: tankLevel },
@@ -257,6 +266,9 @@ export const SITUATIONS: Situation[] = [
 ];
 
 export const SITUATION_GROUPS: { id: SituationGroup; label: string }[] = [
+  { id: "mech", label: "Mecânica" },
+  { id: "elec", label: "Circuitos elétricos" },
+  { id: "electromech", label: "Eletromecânica" },
   { id: "industry", label: "Indústria" },
   { id: "business", label: "Empresarial" },
   { id: "basic", label: "Básicos" },

@@ -16,13 +16,6 @@ function Mini({ def }: { def: ComponentDef }) {
   );
 }
 
-const SOON: Record<string, string[]> = {
-  "Mecânico, translação": ["Massa", "Mola", "Amortecedor", "Força"],
-  "Mecânico, rotação": ["Inércia", "Mola torcional", "Engrenagem", "Torque"],
-  "Elétrico": ["Fonte de tensão", "Resistor", "Capacitor", "Indutor"],
-  "Eletromecânico": ["Motor CC", "Servo de posição"],
-};
-
 export function Library() {
   const [tab, setTab] = useState<"comp" | "sit">("comp");
   const setLeftOpen = useUi((s) => s.setLeftOpen);
@@ -84,20 +77,6 @@ export function Library() {
                   )}
                 </section>
               ))}
-            {!needle && (
-              <section className="soon">
-                <div className="cat-head static">
-                  <span>Próximas fases</span>
-                </div>
-                {Object.entries(SOON).map(([k, v]) => (
-                  <div key={k} className="soon-row" title="Ainda não disponível">
-                    <strong>{k}</strong>
-                    <span>{v.join(", ")}</span>
-                    <em>em breve</em>
-                  </div>
-                ))}
-              </section>
-            )}
           </div>
           <div className="lib-tip">
             <Icon name="info" />

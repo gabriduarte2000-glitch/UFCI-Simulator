@@ -279,6 +279,17 @@ export function compile(project: ProjectIR): CompileResult {
         physPortInfo.push({ key: `${ci.inst.id}.${p.name}`, domain: p.domain });
       }
   for (const pc of physConns) uf.union(physPortId.get(pc.a)!, physPortId.get(pc.b)!);
+  // Portas do mesmo componente que são o mesmo ponto (os dois lados de uma massa, por exemplo).
+  for (const ci of infos) {
+    const first = new Map<string, string>();
+    for (const p of ci.ports) {
+      if (p.dir !== "phys" || !p.node) continue;
+      const key = `${ci.inst.id}.${p.name}`;
+      const f = first.get(p.node);
+      if (f === undefined) first.set(p.node, key);
+      else uf.union(physPortId.get(f)!, physPortId.get(key)!);
+    }
+  }
   const netIdOfRoot = new Map<number, number>();
   const netDomains: Domain[] = [];
   const netByPort = new Map<string, number>();

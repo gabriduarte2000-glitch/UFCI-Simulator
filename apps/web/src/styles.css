@@ -528,8 +528,20 @@ button:disabled {
 .port-short.in {
   left: 6px;
 }
-.port-short.out {
+.port-short.out,
+.port-short.side-right {
   right: 6px;
+}
+.port-short.side-left {
+  left: 6px;
+}
+.port-short.side-top {
+  top: 5px;
+  transform: translateX(-50%);
+}
+.port-short.side-bottom {
+  bottom: 5px;
+  transform: translateX(-50%);
 }
 .tabs .collapse-btn {
   margin-left: auto;
@@ -770,6 +782,20 @@ button:disabled {
   background: #fff;
   border: 2px solid #1b2a41;
   border-radius: 50%;
+}
+.react-flow__handle.port-phys {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}
+.react-flow__handle.port-phys.dom-mech {
+  border-color: #2f8f5b;
+}
+.react-flow__handle.port-phys.dom-rot {
+  border-color: #7a45c4;
+}
+.react-flow__handle.port-phys.dom-elec {
+  border-color: #c9741a;
 }
 .react-flow__handle.port:hover,
 .react-flow__handle.connectingto,

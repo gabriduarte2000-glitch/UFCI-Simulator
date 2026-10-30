@@ -20,6 +20,10 @@ export interface PortDef {
   unit?: string;
   /** Rótulo curto mostrado no símbolo, ao lado da porta. */
   short?: string;
+  /** Lado do símbolo onde a porta aparece. Padrão: entradas à esquerda, saídas à direita. */
+  side?: "left" | "right" | "top" | "bottom";
+  /** Portas físicas do mesmo componente com o mesmo valor aqui são o mesmo ponto (ex.: os dois lados de uma massa). */
+  node?: string;
 }
 
 export type ParamKind = "number" | "int" | "bool" | "select" | "text";

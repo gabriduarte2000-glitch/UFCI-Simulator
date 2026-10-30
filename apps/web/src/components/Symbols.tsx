@@ -80,6 +80,37 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
     case "sqrt":
     case "abs":
       return { w: 92, h: 56 };
+    case "mass":
+    case "inertia":
+      return { w: 96, h: 64 };
+    case "spring":
+    case "tspring":
+    case "damper":
+    case "tdamper":
+    case "inductor":
+      return { w: 112, h: 56 };
+    case "resistor":
+      return { w: 100, h: 48 };
+    case "capacitor":
+    case "force":
+    case "torque":
+    case "velsrc":
+    case "speedsrc":
+      return { w: 84, h: 56 };
+    case "wall":
+      return { w: 64, h: 72 };
+    case "rack":
+    case "gear":
+      return { w: 112, h: 68 };
+    case "vsource":
+    case "isource":
+      return { w: 60, h: 84 };
+    case "egnd":
+      return { w: 52, h: 44 };
+    case "voltmeter":
+      return { w: 72, h: 60 };
+    case "motor":
+      return { w: 116, h: 92 };
     case "note": {
       const t = str(p, "text", "");
       const lines = wrapNote(t, 22);
@@ -108,6 +139,10 @@ export function wrapNote(text: string, max: number): string[] {
 
 const stroke = "#1b2a41";
 const water = "#5aa9ef";
+export const DOMAIN_COLOR = { signal: "#1b2a41", mech: "#2f8f5b", rot: "#7a45c4", elec: "#c9741a" } as const;
+const MECH = DOMAIN_COLOR.mech,
+  ROT = DOMAIN_COLOR.rot,
+  ELEC = DOMAIN_COLOR.elec;
 
 export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Params; w: number; h: number }) {
   const cx = w / 2,
@@ -429,6 +464,218 @@ export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Pa
         </>
       );
     }
+
+    // ---------------------------------------------------------------- físicos
+    case "mass":
+    case "inertia": {
+      const rot = symbol === "inertia";
+      const v = rot ? num(params, "J", 0.01) : num(params, "m", 1);
+      return (
+        <>
+          <path d={`M0 ${cy}H14M${w - 14} ${cy}H${w}`} stroke={MECH} strokeWidth={1.8} />
+          {rot ? (
+            <>
+              <circle cx={cx} cy={cy} r={24} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+              <circle cx={cx} cy={cy} r={4} fill={stroke} />
+              <path d={`M${cx - 15} ${cy - 15}A21 21 0 0 1 ${cx + 16} ${cy - 14}`} fill="none" stroke={ROT} strokeWidth={1.4} markerEnd="url(#arrow-n)" />
+              {txt(cx, cy + 14, `J=${fmt(v)}`, 10.5)}
+            </>
+          ) : (
+            <>
+              <rect x={14} y={10} width={w - 28} height={h - 20} rx={2} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+              {txt(cx, cy - 6, "m", 15)}
+              {txt(cx, cy + 10, `${fmt(v)} kg`, 10.5)}
+            </>
+          )}
+        </>
+      );
+    }
+    case "spring":
+    case "tspring": {
+      const rot = symbol === "tspring";
+      const col = rot ? ROT : MECH;
+      const x0 = 18,
+        x1 = w - 18,
+        n = 6;
+      let d = `M0 ${cy}H${x0}`;
+      for (let i = 0; i < n; i++) {
+        const xa = x0 + ((i + 0.5) / n) * (x1 - x0);
+        const xb = x0 + ((i + 1) / n) * (x1 - x0);
+        d += ` L${xa} ${cy + (i % 2 ? 12 : -12)}`;
+        if (i === n - 1) d += ` L${xb} ${cy}`;
+      }
+      d += `H${w}`;
+      return (
+        <>
+          <path d={d} fill="none" stroke={col} strokeWidth={1.8} strokeLinejoin="round" />
+          {txt(cx, cy - 20, `k=${fmt(num(params, "k", 1))}`, 11)}
+          {rot && <path d={`M${cx - 8} ${cy + 22}a9 9 0 1 1 16 0`} fill="none" stroke={ROT} strokeWidth={1.2} />}
+        </>
+      );
+    }
+    case "damper":
+    case "tdamper": {
+      const rot = symbol === "tdamper";
+      const col = rot ? ROT : MECH;
+      const c = rot ? num(params, "b", 1) : num(params, "c", 1);
+      return (
+        <>
+          <path d={`M0 ${cy}H${cx - 8}M${cx - 8} ${cy - 12}V${cy + 12}M${cx - 8} ${cy - 12}H${cx + 22}M${cx - 8} ${cy + 12}H${cx + 22}M${cx + 6} ${cy}H${w}M${cx + 6} ${cy - 7}V${cy + 7}`} fill="none" stroke={col} strokeWidth={1.8} />
+          {txt(cx, cy - 22, `${rot ? "b" : "c"}=${fmt(c)}`, 11)}
+        </>
+      );
+    }
+    case "force":
+    case "torque": {
+      const rot = symbol === "torque";
+      const col = rot ? ROT : MECH;
+      return (
+        <>
+          <path d={`M${w} ${cy}H${cx + 14}`} stroke={col} strokeWidth={1.8} />
+          {rot ? (
+            <>
+              <path d={`M${cx - 4} ${cy - 14}A16 16 0 1 0 ${cx + 12} ${cy}`} fill="none" stroke={col} strokeWidth={2} markerEnd="url(#arrow-n)" />
+              {txt(cx - 2, cy + 1, "τ", 14)}
+            </>
+          ) : (
+            <>
+              <path d={`M8 ${cy}H${cx + 12}`} stroke={col} strokeWidth={3} markerEnd="url(#arrow-n)" />
+              {txt(cx - 6, cy + 16, "F", 14)}
+            </>
+          )}
+        </>
+      );
+    }
+    case "velsrc":
+    case "speedsrc": {
+      const col = symbol === "speedsrc" ? ROT : MECH;
+      return (
+        <>
+          <path d={`M${w} ${cy}H${cx + 16}`} stroke={col} strokeWidth={1.8} />
+          <circle cx={cx - 2} cy={cy} r={16} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+          {txt(cx - 2, cy + 1, symbol === "speedsrc" ? "ω" : "v", 15)}
+        </>
+      );
+    }
+    case "wall": {
+      const dot = (ln: number) => <path key={ln} d={`M${cx + 2} ${12 + ln * 9}l-8 8`} stroke={stroke} strokeWidth={1.2} />;
+      return (
+        <>
+          <path d={`M0 ${cy}H${cx}M${cx} ${cy}H${w}`} stroke={MECH} strokeWidth={1.8} />
+          <path d={`M${cx} 8V${h - 8}`} stroke={stroke} strokeWidth={2.4} />
+          {[0, 1, 2, 3, 4, 5].map(dot)}
+        </>
+      );
+    }
+    case "rack":
+      return (
+        <>
+          <path d={`M0 ${cy}H18`} stroke={ROT} strokeWidth={1.8} />
+          <circle cx={36} cy={cy} r={16} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+          <circle cx={36} cy={cy} r={3} fill={stroke} />
+          <rect x={30} y={cy + 16} width={w - 30} height={8} fill="#fff" stroke={stroke} strokeWidth={1.4} />
+          {Array.from({ length: 7 }, (_, i) => (
+            <path key={i} d={`M${34 + i * 11} ${cy + 16}v-3`} stroke={stroke} strokeWidth={1.4} />
+          ))}
+          <path d={`M${w - 12} ${cy + 20}H${w}`} stroke={MECH} strokeWidth={1.8} />
+          {txt(cx + 14, cy - 16, `r=${fmt(num(params, "r", 0.05))}`, 10.5)}
+        </>
+      );
+    case "gear": {
+      const N = num(params, "N", 2);
+      return (
+        <>
+          <path d={`M0 ${cy}H24M${w - 20} ${cy}H${w}`} stroke={ROT} strokeWidth={1.8} />
+          <circle cx={38} cy={cy} r={16} fill="#fff" stroke={stroke} strokeWidth={1.6} strokeDasharray="3 2" />
+          <circle cx={w - 36} cy={cy} r={Math.min(22, 12 + 3 * Math.log2(Math.max(1, N)))} fill="#fff" stroke={stroke} strokeWidth={1.6} strokeDasharray="3 2" />
+          {txt(cx, h - 8, `${fmt(N)}:1`, 11, "middle", 700)}
+        </>
+      );
+    }
+    case "resistor": {
+      const x0 = 18,
+        x1 = w - 18,
+        n = 6;
+      let d = `M0 ${cy}H${x0}`;
+      for (let i = 0; i < n; i++) {
+        const xa = x0 + ((i + 0.5) / n) * (x1 - x0);
+        d += ` L${xa} ${cy + (i % 2 ? 9 : -9)}`;
+      }
+      d += ` L${x1} ${cy}H${w}`;
+      return (
+        <>
+          <path d={d} fill="none" stroke={ELEC} strokeWidth={1.8} strokeLinejoin="round" />
+          {txt(cx, cy - 17, `${fmt(num(params, "R", 1))} Ω`, 11)}
+        </>
+      );
+    }
+    case "capacitor":
+      return (
+        <>
+          <path d={`M0 ${cy}H${cx - 5}M${cx + 5} ${cy}H${w}`} stroke={ELEC} strokeWidth={1.8} />
+          <path d={`M${cx - 5} ${cy - 16}V${cy + 16}M${cx + 5} ${cy - 16}V${cy + 16}`} stroke={stroke} strokeWidth={2.4} />
+          {txt(cx, cy - 22, `${fmt(num(params, "C", 1))} F`, 11)}
+        </>
+      );
+    case "inductor": {
+      const x0 = 18,
+        x1 = w - 18,
+        n = 4;
+      const sw = (x1 - x0) / n;
+      let d = `M0 ${cy}H${x0}`;
+      for (let i = 0; i < n; i++) d += ` a${sw / 2} ${sw / 2} 0 0 1 ${sw} 0`;
+      d += `H${w}`;
+      return (
+        <>
+          <path d={d} fill="none" stroke={ELEC} strokeWidth={1.8} />
+          {txt(cx, cy + 18, `${fmt(num(params, "L", 1))} H`, 11)}
+        </>
+      );
+    }
+    case "vsource":
+    case "isource": {
+      const volt = symbol === "vsource";
+      return (
+        <>
+          <path d={`M${cx} 0V${cy - 18}M${cx} ${cy + 18}V${h}`} stroke={ELEC} strokeWidth={1.8} />
+          <circle cx={cx} cy={cy} r={18} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+          {volt ? (
+            <>
+              {txt(cx, cy - 7, "+", 13, "middle", 700)}
+              {txt(cx, cy + 8, "−", 13, "middle", 700)}
+            </>
+          ) : (
+            <path d={`M${cx} ${cy + 10}V${cy - 10}`} stroke={stroke} strokeWidth={2} markerEnd="url(#arrow-n)" />
+          )}
+        </>
+      );
+    }
+    case "egnd":
+      return (
+        <>
+          <path d={`M${cx} 0V16M${cx - 16} 16H${cx + 16}M${cx - 10} 24H${cx + 10}M${cx - 4} 32H${cx + 4}`} fill="none" stroke={stroke} strokeWidth={1.8} />
+          <path d={`M${cx} 0V16`} stroke={ELEC} strokeWidth={1.8} />
+        </>
+      );
+    case "voltmeter":
+      return (
+        <>
+          <path d={`M0 ${cy}H${cx - 20}M${cx + 20} ${cy}H${w}`} stroke={ELEC} strokeWidth={1.8} />
+          <circle cx={cx} cy={cy} r={20} fill="#fff" stroke={stroke} strokeWidth={1.6} />
+          {txt(cx, cy + 1, "V", 16, "middle", 700)}
+        </>
+      );
+    case "motor":
+      return (
+        <>
+          <path d={`M0 14H${cx}V${cy - 28}M0 ${h - 14}H${cx}V${cy + 28}`} fill="none" stroke={ELEC} strokeWidth={1.8} />
+          <path d={`M${cx + 28} ${cy}H${w}`} stroke={ROT} strokeWidth={2.4} />
+          <circle cx={cx} cy={cy} r={28} fill="#fff" stroke={stroke} strokeWidth={1.8} />
+          {txt(cx, cy, "M", 22, "middle", 600)}
+          {txt(10, 25, "+", 12, "middle", 700)}
+          {txt(10, h - 25, "−", 12, "middle", 700)}
+        </>
+      );
     default:
       return (
         <>

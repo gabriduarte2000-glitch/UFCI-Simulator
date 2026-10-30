@@ -90,7 +90,11 @@ function Inner() {
 
   const edges: WireEdgeT[] = useMemo(
     () =>
-      project.connections.map((c) => ({
+      project.connections.map((c) => {
+        const fc = project.components.find((x) => x.id === c.from.component);
+        const fd = fc && getDef(fc.type);
+        const fp = fd && portsOf(fd, fc.params).find((x) => x.name === c.from.port);
+        return {
         id: c.id,
         type: "wire" as const,
         source: c.from.component,
@@ -98,9 +102,10 @@ function Inner() {
         target: c.to.component,
         targetHandle: c.to.port,
         selected: selectedEdges.includes(c.id),
-        data: { flag: flags.edges.has(c.id) ? ("error" as const) : undefined },
-      })),
-    [project.connections, selectedEdges, flags.edges],
+        data: { flag: flags.edges.has(c.id) ? ("error" as const) : undefined, domain: fp?.domain },
+        };
+      }),
+    [project.connections, project.components, selectedEdges, flags.edges],
   );
 
   const onNodesChange = useCallback((changes: NodeChange<BlockNodeT>[]) => {

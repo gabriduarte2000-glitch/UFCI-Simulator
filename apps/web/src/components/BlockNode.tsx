@@ -9,6 +9,8 @@ export interface BlockData extends Record<string, unknown> {
   params: Record<string, ParamValue>;
   flag?: "error" | "incomplete" | "warning";
 }
+type Side = "left" | "right" | "top" | "bottom";
+const POS: Record<Side, Position> = { left: Position.Left, right: Position.Right, top: Position.Top, bottom: Position.Bottom };
 export type BlockNodeT = Node<BlockData, "block">;
 
 function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
@@ -19,45 +21,64 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   useEffect(() => update(id), [sig, id, update]);
   if (!def) return <div className="node-unknown">Tipo desconhecido: {data.type}</div>;
   const { w, h } = nodeSize(def.symbol, data.params);
-  const ins = ports.filter((p) => p.dir === "in");
-  const outs = ports.filter((p) => p.dir === "out");
   const signs = def.symbol === "sum" ? String(data.params.signs?.value ?? "+-") : "";
-  const place = (i: number, n: number) => (n === 1 ? h / 2 : def.symbol === "sum" ? 8 + (i * (h - 16)) / (n - 1) : 12 + (i * (h - 24)) / (n - 1));
-  const hasShort = ports.some((p) => p.short);
   const portTip = (p: { label: string; unit?: string }) => p.label + (p.unit ? ` (${p.unit})` : "");
+  // Lado de cada porta: o padrão é entrada à esquerda e saída à direita.
+  const sideOf = (p: (typeof ports)[number]): Side => p.side ?? (p.dir === "in" ? "left" : "right");
+  const bySide: Record<Side, typeof ports> = { left: [], right: [], top: [], bottom: [] };
+  for (const p of ports) bySide[sideOf(p)].push(p);
+  const place = (p: (typeof ports)[number], side: Side) => {
+    const list = bySide[side];
+    const i = list.indexOf(p),
+      n = list.length;
+    const ext = side === "left" || side === "right" ? h : w;
+    if (n === 1) return ext / 2;
+    if (!p.side && def.symbol === "sum") return 8 + (i * (ext - 16)) / (n - 1);
+    const m = side === "left" || side === "right" ? 14 : 16;
+    return m + (i * (ext - 2 * m)) / (n - 1);
+  };
+  const hasShort = ports.some((p) => p.short);
+  const ins = bySide.left.filter((p) => p.dir === "in");
+  const hasBottom = bySide.bottom.length > 0;
   const isNote = def.symbol === "note";
   const cls = ["block-node", isNote ? "is-note" : "", selected ? "selected" : "", data.flag ? `flag-${data.flag}` : ""].join(" ");
   return (
     <div className={cls} style={{ width: w, height: h }} title={def.description}>
-      <svg width={w} height={h} className="block-art">
+      <svg width={w} height={h} className="block-art" style={{ overflow: "visible" }}>
         <SymbolArt symbol={def.symbol} params={data.params} w={w} h={h} />
       </svg>
-      {ins.map((p, i) => (
-        <Handle key={p.name} id={p.name} type="target" position={Position.Left} style={{ top: place(i, ins.length) }} className="port port-signal" />
-      ))}
-      {outs.map((p, i) => (
-        <Handle key={p.name} id={p.name} type="source" position={Position.Right} style={{ top: place(i, outs.length) }} className="port port-signal" />
-      ))}
+      {ports.map((p) => {
+        const side = sideOf(p);
+        const pos = place(p, side);
+        const phys = p.dir === "phys";
+        const horiz = side === "left" || side === "right";
+        const style = horiz ? { top: pos } : { left: pos };
+        const cls2 = `port ${phys ? "port-phys dom-" + p.domain : "port-signal"}`;
+        return (
+          <Handle key={p.name} id={p.name} type={p.dir === "in" ? "target" : "source"} position={POS[side]} style={style} className={cls2} title={portTip(p)} />
+        );
+      })}
       {hasShort &&
-        ins.map((p, i) => (
-          <span key={p.name} className="port-short in" style={{ top: place(i, ins.length) - 7 }} title={portTip(p)}>
-            {p.short}
-          </span>
-        ))}
-      {hasShort &&
-        outs.map((p, i) => (
-          <span key={p.name} className="port-short out" style={{ top: place(i, outs.length) - 7 }} title={portTip(p)}>
-            {p.short}
-          </span>
-        ))}
+        ports
+          .filter((p) => p.short)
+          .map((p) => {
+            const side = sideOf(p);
+            const pos = place(p, side);
+            const horiz = side === "left" || side === "right";
+            return (
+              <span key={p.name} className={`port-short side-${side}`} style={horiz ? { top: pos - 7 } : { left: pos }} title={portTip(p)}>
+                {p.short}
+              </span>
+            );
+          })}
       {!hasShort && ins.length > 1 &&
         ins.map((p, i) => (
-          <span key={p.name} className="port-label" style={{ top: place(i, ins.length) - 7, left: def.symbol === "sum" ? -22 : 5 }}>
+          <span key={p.name} className="port-label" style={{ top: place(p, "left") - 7, left: def.symbol === "sum" ? -22 : 5 }}>
             {def.symbol === "sum" ? (signs[i] === "-" ? "−" : "+") : i + 1}
           </span>
         ))}
       {!isNote && (
-        <div className="node-title" style={{ top: h + 5 }}>
+        <div className="node-title" style={{ top: h + (hasBottom ? 11 : 5) }}>
           {data.label}
         </div>
       )}
