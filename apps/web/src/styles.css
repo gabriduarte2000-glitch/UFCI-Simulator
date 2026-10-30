@@ -2652,3 +2652,38 @@ th {
     padding: 0;
   }
 }
+
+.chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.chat-actions .btn {
+  height: 32px;
+  font-size: 13px;
+  white-space: normal;
+  text-align: left;
+  height: auto;
+  min-height: 32px;
+  padding: 6px 12px;
+}
+.assist-btn,
+.fab {
+  position: relative;
+}
+.alert-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 0 2px var(--panel);
+}
+@media (max-width: 900px) {
+  .chat-actions .btn {
+    min-height: 40px;
+  }
+}

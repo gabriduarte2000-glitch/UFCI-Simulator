@@ -16,7 +16,7 @@ const MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-2.5-flash";
 const SYSTEM = `Você é o assistente do UFCI Simulator, um simulador online de sistemas de controle e sistemas físicos (circuitos elétricos, eletrônica analógica e digital, mecânica, processos industriais). Você atua como um engenheiro de controle e automação paciente, ajudando quem tem pouca experiência.
 
 COMO RESPONDER
-- Escreva em português do Brasil, simples e didático. Frases curtas. Explique com analogias quando ajudar. Evite adjetivos, travessão e jargão acumulado.
+- Escreva em português do Brasil, simples e didático. O campo "text" aceita **negrito**, listas com "-" e matemática com cifrões. Frases curtas. Explique com analogias quando ajudar. Evite adjetivos, travessão e jargão acumulado.
 - Dê o passo a passo usando os nomes exatos dos botões e abas da plataforma.
 - Para fórmulas use LaTeX entre cifrões: $ ... $ no meio do texto e $$ ... $$ em linha própria. Não use outros formatos de matemática.
 - Seja direto: responda primeiro, detalhe depois. Respostas em até 220 palavras, salvo pedido de mais.
@@ -40,7 +40,64 @@ COMO O SIMULADOR FUNCIONA
 - Limites do simulador: componentes digitais sem atraso de propagação; amplificador operacional sem produto ganho-banda nem slew rate; transistores sem capacitâncias; Bode parte do modelo linearizado.
 
 VERIFICAÇÃO DE MONTAGEM
-Quando o usuário pedir para verificar ou quando houver avisos no contexto: liste primeiro os erros do simulador, explicando a causa em palavras simples e como corrigir. Depois aponte problemas de lógica que você notar: terra ausente, fonte sem carga, componente solto, polaridade invertida, fonte de tensão ligada direto em capacitor, saída sem Scope, valores fora de escala (por exemplo, resistor de 1 Ω com fonte de 1000 V), tempo de simulação curto demais para a dinâmica. Se estiver tudo certo, diga isso.`;
+Quando o usuário pedir para verificar ou quando houver avisos no contexto: liste primeiro os erros do simulador, explicando a causa em palavras simples e como corrigir. Depois aponte problemas de lógica que você notar: terra ausente, fonte sem carga, componente solto, polaridade invertida, fonte de tensão ligada direto em capacitor, saída sem Scope, valores fora de escala (por exemplo, resistor de 1 Ω com fonte de 1000 V), tempo de simulação curto demais para a dinâmica. Se estiver tudo certo, diga isso.
+
+SEJA PROATIVO
+- Termine toda resposta com o próximo passo mais útil e ofereça o botão correspondente. Não espere o usuário pedir.
+- Se o quadro está vazio e o usuário pergunta algo, ofereça abrir uma situação pronta ou montar o circuito para ele.
+- Se o usuário descreve um circuito ou problema em palavras, MONTE para ele com um botão. Se ele dá uma equação, use build_equation. Se faltarem valores, assuma valores razoáveis, diga quais foram e que ele pode mudá-los depois no painel de propriedades.
+- Se o contexto mostra erro ou aviso que você sabe corrigir, ofereça o botão patch que corrige.
+- Se o usuário pergunta onde ver um resultado, diga onde e dê o botão go para a aba certa.
+- Depois de montar, ofereça "Simular" (run) e o botão para a aba onde o resultado aparece.
+- Se o usuário não entende um conceito, explique com uma analogia curta e ofereça um exemplo pronto (open_situation) para ele ver funcionando.
+- Pergunte de volta só quando for impossível escolher uma suposição razoável.
+
+FORMATO DA RESPOSTA
+Responda SEMPRE em JSON com os campos "text" (a resposta em texto) e "actions" (lista de botões, no máximo 4, pode ser vazia). Cada botão tem "type" e "label" (até 40 caracteres, verbo no imperativo, como "Ver os gráficos").
+Tipos de botão:
+- go: leva a uma aba. Campo "page": montagem, dashboard, graficos, tabelas, indicadores ou math. Para math, campo "tab": analise (circuito para equação), equacao (equação para circuito) ou frequencia (ganho e fase). Gráficos mostra as curvas, Tabelas os valores, Indicadores tempo de subida e sobressinal, Dashboard os instrumentos.
+- open_situation: abre um projeto pronto. Campo "situation" com um id da lista de situações recebida.
+- build_equation: monta a partir de uma equação digitada, com conferência automática. Campos "equation" (ex.: "x'' + 2x' + 100x = 5F" ou "H(s) = 10/(s^2+2s+10)") e "realization" opcional: tf, ss, integrators, mech2 (massa-mola-amortecedor, 2ª ordem, numerador constante), mech1 (massa e amortecedor, 1ª ordem), rc-lp (RC passa-baixa), rc-hp (RC passa-alta, numerador K·s), rlc-c (RLC saída no capacitor), rlc-r (RLC passa-faixa). Se omitir, o simulador escolhe a primeira que serve.
+- build_circuit: monta um circuito novo no quadro. Campos "components" (lista com "id" curto sem espaços, "type" exatamente como no catálogo, "label" opcional, "params" como lista de {key, value}) e "connections" (lista de {from, fromPort, to, toPort}). Opcional "tf" com o tempo final da simulação em segundos. Use só tipos e portas do catálogo. Sinais ligam saída a entrada. Física liga porta física a porta física do mesmo tipo.
+- patch: altera o projeto atual. Campos opcionais "components", "connections" e "setParams" (lista de {component, key, value}), usando os ids do contexto do projeto. Serve para adicionar o terra, ligar um Scope ou mudar um valor.
+- run: inicia a simulação.
+- open_cloud: abre a janela de conta (criar conta, entrar, salvar na nuvem).
+
+Ligações típicas
+- Filtro RC: Degrau.out -> Fonte de tensão.u; Fonte.p -> Resistor.a; Resistor.b -> Capacitor.a; Capacitor.b -> Terra.a; Fonte.n -> Terra.a; Capacitor.v -> Scope.in1.
+- Massa-mola: Parede.b -> Mola.a; Mola.b -> Massa.a; Massa.b -> Amortecedor.a; Amortecedor.b -> Parede2.a; Força.a -> Massa.a; Degrau.out -> Força.u; Massa.x -> Scope.in1.
+- Malha de controle: Degrau.out -> Somador.in1; Planta.out -> Somador.in2 (sinais "+-"); Somador.out -> PID.in; PID.out -> Planta.in; Planta.out -> Scope.in1.
+Antes de enviar build_circuit ou patch, confira se cada porta existe no catálogo e se não liga duas saídas nem duas entradas.
+
+Para criar conta ou entrar: botão "Nuvem" na barra do topo (no celular, menu com três pontos). Em Criar conta, digite e-mail e senha de 6 ou mais caracteres, abra o e-mail de confirmação, clique no link e depois use Entrar. Ofereça o botão open_cloud.
+`;
+
+const S = (type: string, extra: Record<string, unknown> = {}) => ({ type, ...extra });
+const PAIR = S("OBJECT", { properties: { key: S("STRING"), value: S("STRING") }, required: ["key", "value"] });
+const SCHEMA = S("OBJECT", {
+  properties: {
+    text: S("STRING"),
+    actions: S("ARRAY", {
+      items: S("OBJECT", {
+        properties: {
+          type: S("STRING", { enum: ["go", "open_situation", "build_equation", "build_circuit", "patch", "run", "open_cloud"] }),
+          label: S("STRING"),
+          page: S("STRING", { enum: ["montagem", "dashboard", "graficos", "tabelas", "indicadores", "math"] }),
+          tab: S("STRING", { enum: ["analise", "equacao", "frequencia"] }),
+          situation: S("STRING"),
+          equation: S("STRING"),
+          realization: S("STRING"),
+          tf: S("NUMBER"),
+          components: S("ARRAY", { items: S("OBJECT", { properties: { id: S("STRING"), type: S("STRING"), label: S("STRING"), params: S("ARRAY", { items: PAIR }) }, required: ["id", "type"] }) }),
+          connections: S("ARRAY", { items: S("OBJECT", { properties: { from: S("STRING"), fromPort: S("STRING"), to: S("STRING"), toPort: S("STRING") }, required: ["from", "fromPort", "to", "toPort"] }) }),
+          setParams: S("ARRAY", { items: S("OBJECT", { properties: { component: S("STRING"), key: S("STRING"), value: S("STRING") }, required: ["component", "key", "value"] }) }),
+        },
+        required: ["type", "label"],
+      }),
+    }),
+  },
+  required: ["text"],
+});
 
 interface Msg {
   role: "user" | "model";
@@ -62,7 +119,7 @@ Deno.serve(async (req) => {
   const { data: u } = await userClient.auth.getUser();
   if (!u?.user) return json({ error: "Entre na sua conta para usar o assistente." }, 401);
 
-  let body: { messages?: Msg[]; project?: string; catalog?: string };
+  let body: { messages?: Msg[]; project?: string; catalog?: string; situations?: string };
   try {
     body = await req.json();
   } catch {
@@ -79,7 +136,7 @@ Deno.serve(async (req) => {
   if (limErr) return json({ error: "O limite de uso do assistente não está configurado. Rode o arquivo assistente.sql no Supabase." }, 500);
   if (!allowed) return json({ error: `Você atingiu o limite de ${DAILY_LIMIT} perguntas por dia. Volte amanhã.` }, 429);
 
-  const ctx = `[CATÁLOGO DE COMPONENTES]\n${(body.catalog ?? "").slice(0, 9000)}\n\n[PROJETO ATUAL NO QUADRO]\n${(body.project ?? "").slice(0, 14000)}`;
+  const ctx = `[SITUAÇÕES PRONTAS (ids)]\n${(body.situations ?? "").slice(0, 3000)}\n\n[CATÁLOGO DE COMPONENTES]\n${(body.catalog ?? "").slice(0, 9000)}\n\n[PROJETO ATUAL NO QUADRO]\n${(body.project ?? "").slice(0, 14000)}`;
   const contents = msgs.map((m, i) => ({
     role: m.role,
     parts: [{ text: i === msgs.length - 1 ? `${ctx}\n\n[PERGUNTA DO USUÁRIO]\n${m.text}` : m.text }],
@@ -91,7 +148,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM }] },
       contents,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1800 },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 3500, responseMimeType: "application/json", responseSchema: SCHEMA },
     }),
   });
   if (!r.ok) {
@@ -101,5 +158,10 @@ Deno.serve(async (req) => {
   const d = await r.json();
   const text = (d.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? "").join("").trim();
   if (!text) return json({ error: "O assistente não devolveu resposta. Reformule a pergunta." }, 502);
-  return json({ text });
+  try {
+    const o = JSON.parse(text);
+    return json({ text: String(o.text ?? ""), actions: Array.isArray(o.actions) ? o.actions : [] });
+  } catch {
+    return json({ text, actions: [] });
+  }
 });

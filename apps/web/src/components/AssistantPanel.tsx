@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ask, check, useAssist } from "../assistant";
+import { ask, check, greet, runAction, useAssist } from "../assistant";
 import { useUi } from "../ui";
 import { texHtml } from "./Tex";
 import { Icon } from "./Icon";
 
-const CHIPS = ["Como começo um circuito?", "Como medir ganho e fase?", "Onde vejo o resultado?", "O que esse circuito faz?"];
+const CHIPS = ["Como começo um circuito?", "Como medir ganho e fase?", "Onde vejo o resultado?", "O que esse circuito faz?", "Como crio uma conta?"];
 
 /** Texto simples com **negrito**, `código` e matemática $...$ . */
 function Inline({ text }: { text: string }) {
@@ -80,6 +80,10 @@ export default function AssistantPanel() {
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (open) greet();
+  }, [open]);
+
+  useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [messages, busy]);
 
@@ -119,17 +123,18 @@ export default function AssistantPanel() {
       </div>
 
       <div className="assist-body">
-        {messages.length === 0 && (
-          <div className="assist-hello">
-            <p>Oi! Sou o assistente do simulador. Posso explicar como montar um circuito, dizer onde ver o resultado, como medir uma grandeza e apontar o que está errado na sua montagem.</p>
-            <button className="btn primary" disabled={busy} onClick={() => void check()}>
-              Verificar minha montagem
-            </button>
-          </div>
-        )}
         {messages.map((m, i) => (
           <div key={i} className={`chat-msg ${m.role === "user" ? "me" : "bot"}${m.local ? " local" : ""}`}>
             {m.role === "user" ? m.text : <Rich text={m.text} />}
+            {m.actions && m.actions.length > 0 && (
+              <div className="chat-actions">
+                {m.actions.map((a, k) => (
+                  <button key={k} className={`btn${k === 0 ? " primary" : ""}`} disabled={busy} onClick={() => runAction(a)}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         {busy && <div className="chat-msg bot typing">Pensando…</div>}
@@ -168,7 +173,7 @@ export default function AssistantPanel() {
             value={text}
             rows={1}
             maxLength={1500}
-            placeholder="Pergunte sobre o seu circuito…"
+            placeholder="Pergunte ou peça: monte um filtro RC de 1 kHz…"
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

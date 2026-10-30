@@ -50,6 +50,8 @@ interface State {
   select(nodes: string[], edges: string[]): void;
   newProject(): void;
   replaceProject(p: ProjectIR): void;
+  /** Troca o conteúdo do projeto mantendo o histórico, para poder desfazer. */
+  applyProject(p: ProjectIR): void;
   openFromText(text: string): string | null;
   setName(name: string): void;
   addComponent(type: string, pos: { x: number; y: number }): string | null;
@@ -126,6 +128,14 @@ export const useProject = create<State>((set, get) => {
       set({ project: p, past: [], future: [], selectedNodes: [], selectedEdges: [] });
       emit({ kind: "replace" });
     },
+    applyProject: (p) =>
+      commit((d) => {
+        d.components = p.components;
+        d.connections = p.connections;
+        d.layout = p.layout;
+        d.simulation = p.simulation;
+        d.meta.name = p.meta.name;
+      }, { kind: "replace" }),
     openFromText: (text) => {
       try {
         const r = parseProject(JSON.parse(text));

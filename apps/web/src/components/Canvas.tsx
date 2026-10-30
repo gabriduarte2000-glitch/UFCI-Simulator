@@ -1,4 +1,4 @@
-import { useAssist } from "../assistant";
+import { useAssist, useAssistAlert } from "../assistant";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Background,
@@ -305,11 +305,13 @@ function MobileDock() {
   const hasNode = useProject((s) => s.selectedNodes.length > 0);
   const hasSel = useProject((s) => s.selectedNodes.length + s.selectedEdges.length > 0);
   const ui = useUi.getState;
+  const alert = useAssistAlert();
   return (
     <>
       <div className="fab-col">
         <button className="fab" aria-label="Abrir o assistente" onClick={() => useAssist.getState().setOpen(true)}>
           <Icon name="sparkle" size={20} />
+          {alert && <i className="alert-dot" />}
         </button>
         <button
           className="fab primary"

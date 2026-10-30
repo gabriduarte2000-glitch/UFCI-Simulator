@@ -16,3 +16,4 @@ export * from "./eqparse";
 export * from "./synth";
 export * from "./freq";
 export * from "./assist";
+export * from "./assist-actions";
