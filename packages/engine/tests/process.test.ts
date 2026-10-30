@@ -394,3 +394,23 @@ describe("situações prontas", () => {
     expect(sim.events.some((e) => e.key === "value" && e.to === 30)).toBe(true);
   });
 });
+
+describe("tratamento de água pluvial (TCC)", () => {
+  const finalOf = (sim: Simulation, id: string) => at(sim, id, 1200);
+  it("roda sem erro e os níveis ficam dentro dos tanques", () => {
+    const s = SITUATIONS.find((x) => x.id === "rain-treatment")!.make();
+    const sim = new Simulation(s);
+    sim.runToEnd();
+    expect(sim.status).toBe("finished");
+    for (const id of ["t0", "t1", "dec", "t3", "t4"]) {
+      const h = finalOf(sim, `${id}.h`);
+      expect(h).toBeGreaterThanOrEqual(0);
+      expect(h).toBeLessThanOrEqual(0.4 + 1e-9);
+    }
+  });
+  it("pré-tratamento chega ao nível de equilíbrio (q/k)²", () => {
+    const sim = new Simulation(SITUATIONS.find((x) => x.id === "rain-treatment")!.make());
+    sim.runToEnd();
+    expect(finalOf(sim, "t1.h")).toBeCloseTo((2.5 / 6) ** 2, 2);
+  });
+});

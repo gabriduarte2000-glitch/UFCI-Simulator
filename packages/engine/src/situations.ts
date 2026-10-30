@@ -3,6 +3,7 @@
 
 import { build, exampleFirstOrder, examplePidLoop } from "./examples";
 import { dcMotorLoad, flexibleShaft, geared, massSpringDamper, positionServo, quarterCar, rcFilters, rlcSeries } from "./situations-phys";
+import { rainTreatment } from "./situations-tcc";
 import type { ProjectIR } from "./types";
 
 export type SituationGroup = "basic" | "industry" | "business" | "mech" | "elec" | "electromech";
@@ -256,6 +257,7 @@ export const SITUATIONS: Situation[] = [
   { id: "geared-motor", group: "electromech", title: "Motor com redutor de engrenagens", description: "Redutor 10:1 entre o motor e uma carga pesada com atrito.", explore: "Mude a relação N e compare a velocidade do motor com a da carga.", make: geared },
   { id: "first-order", group: "basic", title: "Resposta de 1ª ordem", description: "Degrau aplicado a G(s) = 1/(s+1).", explore: "Troque a constante de tempo e veja o tempo de subida mudar.", make: exampleFirstOrder },
   { id: "pid-loop", group: "basic", title: "Malha fechada com PID", description: "PID controlando uma planta de 2ª ordem.", explore: "Mude Kp, Ki e Kd com a simulação rodando.", make: examplePidLoop },
+  { id: "rain-treatment", group: "industry", title: "Tratamento de água pluvial (TCC)", description: "Reservatório, bomba, pré-tratamento, decantador, caixa de água decantada, cloração com filtro e saída, com as válvulas 1, 3, 4 e 5.", explore: "Na página Gráficos, mexa nos controles deslizantes das bombas e das válvulas e veja os níveis de cada tanque.", make: rainTreatment },
   { id: "tank-level", group: "industry", title: "Controle de nível de tanque", description: "Válvula de entrada, tanque com saída por gravidade e transmissor de nível.", explore: "Aumente o consumo com o controle deslizante e veja a válvula compensar.", make: tankLevel },
   { id: "tank-temperature", group: "industry", title: "Temperatura em tanque aquecido", description: "Resistência elétrica, tubulação com tempo morto e sensor lento.", explore: "Aumente o ganho e veja a malha oscilar por causa do tempo morto.", make: tankTemperature },
   { id: "boiler", group: "industry", title: "Caldeira com controle de nível", description: "A água aquece até 100 °C, vira vapor e o nível desce. A válvula de água repõe.", explore: "Aumente a potência do queimador e observe a produção de vapor.", make: boiler },
