@@ -2466,3 +2466,37 @@ th {
     height: 40px;
   }
 }
+
+/* ------- resposta em frequência */
+.bode-card,
+.bode-meas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.bode-plot {
+  width: 100%;
+}
+.bode-table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.bode-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 4px 14px 4px 0;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.bode-table td {
+  padding: 4px 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .seg button {
+    padding: 9px 6px;
+    font-size: 12px;
+  }
+}

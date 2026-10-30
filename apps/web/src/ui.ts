@@ -19,7 +19,7 @@ export function useCompact(): boolean {
 export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores" | "math";
 /** Como os sinais escolhidos se distribuem nos gráficos. */
 export type ChartMode = "unit" | "each" | "all";
-export type MathTab = "analise" | "equacao";
+export type MathTab = "analise" | "equacao" | "frequencia";
 export type RightTab = "props" | "sim";
 
 interface Ui {

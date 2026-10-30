@@ -14,3 +14,4 @@ export * from "./math";
 export { eigvals, polyRoots, polyFromRoots } from "./eig";
 export * from "./eqparse";
 export * from "./synth";
+export * from "./freq";
