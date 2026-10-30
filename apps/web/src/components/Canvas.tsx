@@ -1,3 +1,4 @@
+import { useAssist } from "../assistant";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Background,
@@ -307,6 +308,9 @@ function MobileDock() {
   return (
     <>
       <div className="fab-col">
+        <button className="fab" aria-label="Abrir o assistente" onClick={() => useAssist.getState().setOpen(true)}>
+          <Icon name="sparkle" size={20} />
+        </button>
         <button
           className="fab primary"
           aria-label="Adicionar componente"

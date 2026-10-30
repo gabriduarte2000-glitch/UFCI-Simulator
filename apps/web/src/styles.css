@@ -2500,3 +2500,155 @@ th {
     font-size: 12px;
   }
 }
+
+/* ------- assistente */
+.assist {
+  position: fixed;
+  right: 16px;
+  bottom: 40px;
+  z-index: 50;
+  width: 410px;
+  height: min(640px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.assist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.assist-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.assist-head .muted {
+  font-size: 12px;
+}
+.assist-head-actions {
+  display: flex;
+  gap: 6px;
+}
+.assist-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.assist-hello {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.assist-hello p {
+  margin: 0;
+}
+.chat-msg {
+  max-width: 94%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.chat-msg.me {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.bot {
+  align-self: flex-start;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.local {
+  border-style: dashed;
+}
+.chat-msg.typing {
+  color: var(--muted);
+}
+.chat-msg p {
+  margin: 0 0 8px;
+}
+.chat-msg p:last-child,
+.chat-msg ul:last-child,
+.chat-msg ol:last-child {
+  margin-bottom: 0;
+}
+.chat-msg ul,
+.chat-msg ol {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+.chat-msg code {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0 5px;
+  font-size: 12.5px;
+}
+.chat-eq {
+  overflow-x: auto;
+  margin: 4px 0 8px;
+}
+.assist-foot {
+  border-top: 1px solid var(--line);
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.assist-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.assist-chips .chip-btn {
+  white-space: nowrap;
+  flex: none;
+}
+.assist-input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.assist-input textarea {
+  flex: 1;
+  resize: none;
+  max-height: 110px;
+  font-size: 14px;
+}
+@media (max-width: 900px) {
+  .assist {
+    inset: auto 0 0 0;
+    width: 100%;
+    height: 82vh;
+    border-radius: 16px 16px 0 0;
+    z-index: 70;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .assist-input textarea {
+    font-size: 16px;
+  }
+  .assist-input .btn {
+    height: 42px;
+    width: 46px;
+    padding: 0;
+  }
+}

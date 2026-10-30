@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
+import { useAssist } from "./assistant";
 import { CloudDialog } from "./components/CloudDialog";
 import { TopBar } from "./components/TopBar";
 import { Library } from "./components/Library";
@@ -12,6 +13,7 @@ import { GraficosPage } from "./pages/GraficosPage";
 import { TabelasPage } from "./pages/TabelasPage";
 import { IndicadoresPage } from "./pages/IndicadoresPage";
 const MathPage = lazy(() => import("./pages/MathPage"));
+const AssistantPanel = lazy(() => import("./components/AssistantPanel"));
 import { BottomNav } from "./components/BottomNav";
 import { useCompact, useUi } from "./ui";
 import "./live";
@@ -36,6 +38,7 @@ export function App() {
   const setLeftOpen = useUi((s) => s.setLeftOpen);
   const setRightOpen = useUi((s) => s.setRightOpen);
   const compact = useCompact();
+  const assistOpen = useAssist((s) => s.open);
   return (
     <ReactFlowProvider>
       <div className="app">
@@ -77,6 +80,11 @@ export function App() {
         {page === "math" && (
           <Suspense fallback={<div className="page-empty"><p>Carregando…</p></div>}>
             <MathPage />
+          </Suspense>
+        )}
+        {assistOpen && (
+          <Suspense fallback={null}>
+            <AssistantPanel />
           </Suspense>
         )}
         <StatusBar />
