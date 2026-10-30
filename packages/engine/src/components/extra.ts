@@ -230,6 +230,7 @@ registerComponent({
   ports: [
     inP("qin", "Vazão de entrada", "q", "L/min"),
     inP("qext", "Saída externa (consumo)", "ext", "L/min", true),
+    inP("Tw", "Temperatura da água (só a cor no desenho)", "T", "°C", true),
     outP("h", "Nível", "h", "m"),
     outP("pct", "Nível em porcentagem", "%", "%"),
     outP("qout", "Vazão de saída por gravidade", "qs", "L/min"),
@@ -238,6 +239,7 @@ registerComponent({
     { key: "A", label: "Área da seção", unit: "m²", kind: "number", default: 1.2, min: 1e-4, group: "basic" },
     { key: "hmax", label: "Altura total", unit: "m", kind: "number", default: 2, min: 1e-3, group: "basic" },
     { key: "kout", label: "Coeficiente da saída k", unit: "L/min/√m", kind: "number", default: 60, min: 0, group: "basic", hint: "A saída vale k·√nível. Zero fecha a saída por gravidade." },
+    { key: "T", label: "Cor da água: temperatura", unit: "°C", kind: "number", default: 20, group: "advanced", hint: "Só muda a cor da água no desenho (azul a 20 °C, vermelho a 95 °C). Não entra no cálculo. A entrada de temperatura, se ligada, tem prioridade." },
     { key: "h0", label: "Nível inicial", unit: "m", kind: "number", default: 1, min: 0, group: "initial", initialOnly: true },
   ],
   block: (p) => {

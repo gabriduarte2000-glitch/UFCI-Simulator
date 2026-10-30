@@ -23,12 +23,17 @@ function WireEdgeImpl({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
   const ly = back ? yb : sy;
   const idx = useLive((s) => s.edgeSignal[id]);
   const value = useLive((s) => (idx !== null && idx !== undefined ? s.current[idx] : undefined));
-  const active = useLive((s) => s.status !== "idle");
+  const unit = useLive((s) => (idx !== null && idx !== undefined ? s.signals[idx]?.unit : undefined));
+  const status = useLive((s) => s.status);
+  const active = status !== "idle";
   const show = useUi((s) => s.showWireValues);
   const color = data?.flag === "error" ? "#d93a3a" : selected ? "#2a6bd6" : phys ? DOMAIN_COLOR[data!.domain!] : "#1b2a41";
   return (
     <>
       <BaseEdge id={id} path={path} markerEnd={phys ? undefined : `url(#arrow-${data?.flag === "error" ? "err" : selected ? "sel" : "n"})`} style={{ stroke: color, strokeWidth: selected ? 2.6 : phys ? 2.2 : 1.8 }} interactionWidth={18} />
+      {active && !phys && unit === "L/min" && value !== undefined && Math.abs(value) > 1e-4 && (
+        <path d={path} className="wire-flow" style={{ stroke: "#3b8fe8", strokeWidth: 3.2, ["--dur" as string]: `${(16 / Math.min(220, 14 + 14 * Math.abs(value))).toFixed(3)}s`, animationPlayState: status === "running" ? "running" : "paused", animationDirection: value < 0 ? "reverse" : "normal" }} />
+      )}
       {show && active && value !== undefined && Number.isFinite(value) && (
         <EdgeLabelRenderer>
           <div className="wire-value" style={{ transform: `translate(-50%,-50%) translate(${lx}px,${ly}px)` }}>

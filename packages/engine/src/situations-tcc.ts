@@ -48,6 +48,8 @@ export function rainTreatment(): ProjectIR {
       { id: "t4", type: "process.tank", label: "Cloração e filtro", params: { A: 0.08, hmax: 0.4, kout: 0, h0: 0.05 }, pos: [860, 430] },
       ...v5.comps,
 
+      { id: "temp", type: "signal.manual", label: "Temperatura da água (°C, só a cor)", params: { value: 20, min: 10, max: 95 }, pos: [0, 330] },
+
       { id: "scope1", type: "sink.scope", label: "Níveis: reservatório, pré-tratamento e decantador (m)", pos: [1260, 0] },
       { id: "scope2", type: "sink.scope", label: "Níveis: água decantada e cloração (m) e saída (L/min)", pos: [1500, 440] },
     ],
@@ -69,6 +71,11 @@ export function rainTreatment(): ProjectIR {
       ["qsum", "out", "t4", "qin"],
       ...v5.conns,
 
+      ["temp", "out", "t0", "Tw"],
+      ["temp", "out", "t1", "Tw"],
+      ["temp", "out", "dec", "Tw"],
+      ["temp", "out", "t3", "Tw"],
+      ["temp", "out", "t4", "Tw"],
       ["t0", "h", "scope1", "in1"],
       ["t1", "h", "scope1", "in2"],
       ["dec", "h", "scope1", "in3"],

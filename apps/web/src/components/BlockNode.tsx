@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo } from "react";
 import { Handle, Position, useUpdateNodeInternals, type NodeProps, type Node } from "@xyflow/react";
 import { getDef, portsOf, type ParamValue } from "@ufci/engine";
+import { useHasInputWire, useLiveInput, useLiveOut } from "../liveOut";
 import { nodeSize, SymbolArt } from "./Symbols";
 
 export interface BlockData extends Record<string, unknown> {
@@ -13,12 +14,23 @@ type Side = "left" | "right" | "top" | "bottom";
 const POS: Record<Side, Position> = { left: Position.Left, right: Position.Right, top: Position.Top, bottom: Position.Bottom };
 export type BlockNodeT = Node<BlockData, "block">;
 
+/** Valores ao vivo entregues ao símbolo, ou nada quando não há simulação nem cor ligada. */
+function liveFor(symbol: string, out: Record<string, number>, twWire: boolean, tw: number) {
+  const hasOut = Object.values(out).some((v) => Number.isFinite(v));
+  const withTw = symbol === "tank" && twWire && Number.isFinite(tw) ? { ...out, Tw: tw } : out;
+  return hasOut || (symbol === "tank" && "Tw" in withTw) ? withTw : undefined;
+}
+
 function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   const def = getDef(data.type);
   const update = useUpdateNodeInternals();
   const ports = useMemo(() => (def ? portsOf(def, data.params) : []), [def, data.params]);
   const sig = ports.map((p) => p.name).join(",");
-  useEffect(() => update(id), [sig, id, update]);
+  const liveOut = useLiveOut(id, def?.symbol ?? "");
+  const twWire = useHasInputWire(id, "Tw");
+  const twVal = useLiveInput(id, "Tw");
+  const size = def ? nodeSize(def.symbol, data.params) : { w: 0, h: 0 };
+  useEffect(() => update(id), [sig, id, update, size.w, size.h]);
   if (!def) return <div className="node-unknown">Tipo desconhecido: {data.type}</div>;
   const { w, h } = nodeSize(def.symbol, data.params);
   const signs = def.symbol === "sum" ? String(data.params.signs?.value ?? "+-") : "";
@@ -45,7 +57,7 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   return (
     <div className={cls} style={{ width: w, height: h }} title={def.description}>
       <svg width={w} height={h} className="block-art" style={{ overflow: "visible" }}>
-        <SymbolArt symbol={def.symbol} params={data.params} w={w} h={h} />
+        <SymbolArt symbol={def.symbol} params={data.params} w={w} h={h} live={liveFor(def.symbol, liveOut, twWire, twVal)} />
       </svg>
       {ports.map((p) => {
         const side = sideOf(p);

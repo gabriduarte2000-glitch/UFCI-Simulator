@@ -1,6 +1,7 @@
 // Símbolos dos blocos, no estilo dos livros de controle (D'Azzo, Ogata): caixas com a função
 // de transferência, círculo somador, triângulo de ganho.
 
+import { useId } from "react";
 import type { ParamValue } from "@ufci/engine";
 
 type Params = Record<string, ParamValue>;
@@ -12,6 +13,20 @@ const str = (p: Params, k: string, d = "") => {
   const v = p[k]?.value;
   return v === undefined ? d : String(v);
 };
+
+const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+const fin = (v: number | undefined): v is number => typeof v === "number" && Number.isFinite(v);
+
+/** Cor da água pela temperatura: azul a 20 °C, vermelho a 95 °C. */
+export function tempColor(T: number): string {
+  const f = clamp((T - 20) / 75, 0, 1);
+  const a = [90, 169, 239],
+    b = [224, 64, 40];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(",")})`;
+}
+
+/** Valores ao vivo das saídas do componente, por nome de porta (Tw: temperatura de cor). */
+export type LiveVals = Record<string, number>;
 
 const SUP = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
 const sup = (n: number) => [...String(n)].map((c) => SUP[+c] ?? c).join("");
@@ -59,11 +74,15 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
       return { w: 92, h: 78 };
     case "ss":
       return { w: 118, h: 56 };
+    // Os tanques crescem de leve com a altura e a área (ou o volume), sem mudar o encaixe das portas.
     case "tank":
-    case "htank":
-      return { w: 96, h: 96 };
+      return { w: clamp(Math.round(72 + 26 * Math.sqrt(num(p, "A", 1.2))), 72, 128), h: clamp(Math.round(66 + 34 * Math.sqrt(num(p, "hmax", 2))), 66, 136) };
+    case "htank": {
+      const k = Math.cbrt(num(p, "V", 0.05) / 0.05);
+      return { w: clamp(Math.round(70 + 28 * k), 70, 130), h: clamp(Math.round(70 + 26 * k), 70, 130) };
+    }
     case "boiler":
-      return { w: 104, h: 104 };
+      return { w: clamp(Math.round(86 + 24 * Math.sqrt(num(p, "A", 0.5))), 86, 132), h: clamp(Math.round(78 + 28 * Math.sqrt(num(p, "hmax", 1))), 78, 140) };
     case "valve":
     case "pump":
     case "heater":
@@ -144,7 +163,21 @@ const MECH = DOMAIN_COLOR.mech,
   ROT = DOMAIN_COLOR.rot,
   ELEC = DOMAIN_COLOR.elec;
 
-export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Params; w: number; h: number }) {
+/** Linha de onda que se repete a cada 24 px, para a animação de deslizar sem emendas. */
+function wavePath(x0: number, y: number, len: number): string {
+  let d = `M${x0} ${y}q6 -3 12 0`;
+  for (let i = 1; i < Math.ceil(len / 12); i++) d += "t12 0";
+  return d;
+}
+
+function bubbles(l: number, r: number, bot: number, uid: string, n: number) {
+  return Array.from({ length: n }, (_, i) => (
+    <circle key={`${uid}b${i}`} className="bubble" cx={l + 8 + ((r - l - 16) * (i + 0.5)) / n} cy={bot - 6} r={2.2} fill="#fff" style={{ animationDelay: `${(i * 0.37) % 1.4}s` }} />
+  ));
+}
+
+export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; params: Params; w: number; h: number; live?: LiveVals }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const cx = w / 2,
     cy = h / 2;
   const txt = (x: number, y: number, t: string, size = 13, anchor: "middle" | "start" | "end" = "middle", weight = 500) => (
@@ -351,76 +384,147 @@ export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Pa
       );
     }
     case "tank": {
-      const lvl = 0.55;
+      const hmax = num(params, "hmax", 2);
+      const hv = fin(live?.h) ? live!.h : num(params, "h0", 1);
+      const f = clamp(hv / hmax, 0, 1);
+      const col = tempColor(fin(live?.Tw) ? live!.Tw : num(params, "T", 20));
       const top = 10,
         bot = h - 12,
         l = 14,
         r = w - 14;
-      const y = bot - (bot - top) * lvl;
+      const y = bot - (bot - top) * f;
+      const running = fin(live?.h);
+      const dripping = running && fin(live?.qout) && live!.qout > 0.01;
       return (
         <>
-          <rect x={l} y={y} width={r - l} height={bot - y} fill={water} opacity={0.55} />
+          <defs>
+            <clipPath id={`${uid}c`}>
+              <rect x={l} y={top} width={r - l} height={bot - top} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${uid}c)`}>
+            <rect x={l} y={y} width={r - l} height={bot - y + 2} fill={col} opacity={0.62} />
+            <g className={running ? "wave" : ""}>
+              <path d={wavePath(l - 24, y, r - l + 48)} fill="none" stroke={col} strokeWidth={2.2} />
+            </g>
+          </g>
           <path d={`M${l} ${top}V${bot}H${r}V${top}`} fill="none" stroke={stroke} strokeWidth={2} strokeLinejoin="round" />
-          <path d={`M${l + 4} ${y}q6 -3 12 0t12 0t12 0t12 0`} fill="none" stroke="#2a6bd6" strokeWidth={1.2} />
           <path d={`M${r} ${bot - 6}h10`} stroke={stroke} strokeWidth={2} />
+          {dripping && <circle className="drip" cx={r + 9} cy={bot - 4} r={2.4} fill={col} />}
+          {txt(cx, clamp(y - 8, top + 8, bot - 8), `${Math.round(f * 100)}%`, 11, "middle", 700)}
         </>
       );
     }
     case "htank": {
+      const T = fin(live?.T) ? live!.T : num(params, "T0", 25);
+      const col = tempColor(T);
       const top = 10,
         bot = h - 12,
         l = 14,
         r = w - 14;
+      const yw = top + 14;
+      const running = fin(live?.T);
       return (
         <>
-          <rect x={l} y={top + 14} width={r - l} height={bot - top - 14} fill={water} opacity={0.5} />
+          <defs>
+            <clipPath id={`${uid}c`}>
+              <rect x={l} y={top} width={r - l} height={bot - top} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${uid}c)`}>
+            <rect x={l} y={yw} width={r - l} height={bot - yw} fill={col} opacity={0.62} />
+            <g className={running ? "wave" : ""}>
+              <path d={wavePath(l - 24, yw, r - l + 48)} fill="none" stroke={col} strokeWidth={2.2} />
+            </g>
+            {running && T > 85 && bubbles(l, r, bot, uid, 4)}
+          </g>
           <path d={`M${l} ${top}V${bot}H${r}V${top}`} fill="none" stroke={stroke} strokeWidth={2} strokeLinejoin="round" />
-          <path d={`M${l + 10} ${bot - 10}h${r - l - 20}M${l + 10} ${bot - 10}q4 -8 8 0t8 0t8 0t8 0t8 0`} fill="none" stroke="#d6502a" strokeWidth={1.8} />
-          {txt(cx, top + 30, "°C", 13, "middle", 700)}
+          <path d={`M${l + 10} ${bot - 8}q4 -8 8 0t8 0t8 0t8 0t8 0`} fill="none" stroke="#d6502a" strokeWidth={1.8} />
+          {txt(cx, top + 30, `${fmt(Math.round(T * 10) / 10)} °C`, 12, "middle", 700)}
         </>
       );
     }
     case "boiler": {
+      const hmax = num(params, "hmax", 1);
+      const hv = fin(live?.h) ? live!.h : num(params, "h0", 0.4);
+      const f = clamp(hv / hmax, 0, 1);
+      const T = fin(live?.T) ? live!.T : num(params, "T0", 25);
+      const col = tempColor(T);
       const top = 14,
         bot = h - 10,
         l = 12,
         r = w - 12;
+      const y = bot - (bot - top - 26) * f;
+      const running = fin(live?.T);
+      const steaming = running && fin(live?.steam) && live!.steam > 0.0005;
+      const shell = `M${l} ${top + 14}Q${l} ${top} ${cx} ${top}Q${r} ${top} ${r} ${top + 14}V${bot}H${l}Z`;
       return (
         <>
-          <rect x={l} y={top + 34} width={r - l} height={bot - top - 34} fill={water} opacity={0.5} />
-          <path d={`M${l} ${top + 14}Q${l} ${top} ${cx} ${top}Q${r} ${top} ${r} ${top + 14}V${bot}H${l}Z`} fill="none" stroke={stroke} strokeWidth={2} strokeLinejoin="round" />
+          <defs>
+            <clipPath id={`${uid}c`}>
+              <path d={shell} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${uid}c)`}>
+            <rect x={l} y={y} width={r - l} height={bot - y + 2} fill={col} opacity={0.62} />
+            <g className={running ? "wave" : ""}>
+              <path d={wavePath(l - 24, y, r - l + 48)} fill="none" stroke={col} strokeWidth={2.2} />
+            </g>
+            {running && T > 96 && bubbles(l, r, bot, uid, 5)}
+          </g>
+          <path d={shell} fill="none" stroke={stroke} strokeWidth={2} strokeLinejoin="round" />
           <path d={`M${cx - 6} ${top}v-8M${cx + 4} ${top}v-8`} stroke="#8a9bb5" strokeWidth={2} strokeLinecap="round" />
-          <path d={`M${l + 10} ${bot - 9}h${r - l - 20}M${l + 10} ${bot - 9}q4 -8 8 0t8 0t8 0t8 0t8 0`} fill="none" stroke="#d6502a" strokeWidth={1.8} />
-          {txt(cx, top + 22, "vapor", 11)}
+          {steaming && [0, 1, 2].map((i) => <circle key={i} className="steam" cx={cx - 4 + i * 5} cy={top - 8} r={3 + i} fill="#c9d3e3" style={{ animationDelay: `${i * 0.6}s` }} />)}
+          <path d={`M${l + 10} ${bot - 7}q4 -8 8 0t8 0t8 0t8 0t8 0`} fill="none" stroke="#d6502a" strokeWidth={1.8} />
+          {txt(cx, top + 18, `${fmt(Math.round(T * 10) / 10)} °C`, 11, "middle", 700)}
         </>
       );
     }
     case "valve": {
       const my = cy + 4;
+      const max = num(params, "max", 120);
+      const f = fin(live?.out) ? clamp(live!.out / max, 0, 1) : clamp(num(params, "p0", 0) / 100, 0, 1);
       return (
         <>
-          <path d={`M4 ${my - 14}L${cx} ${my}L4 ${my + 14}ZM${w - 4} ${my - 14}L${cx} ${my}L${w - 4} ${my + 14}Z`} fill="#fff" stroke={stroke} strokeWidth={1.8} strokeLinejoin="round" />
+          <path d={`M4 ${my - 14}L${cx} ${my}L4 ${my + 14}ZM${w - 4} ${my - 14}L${cx} ${my}L${w - 4} ${my + 14}Z`} fill={water} fillOpacity={0.15 + 0.8 * f} stroke={stroke} strokeWidth={1.8} strokeLinejoin="round" />
           <path d={`M${cx} ${my}V${my - 18}`} stroke={stroke} strokeWidth={1.8} />
           <path d={`M${cx - 12} ${my - 18}Q${cx} ${my - 32} ${cx + 12} ${my - 18}Z`} fill="#fff" stroke={stroke} strokeWidth={1.8} />
+          {txt(cx, my + 24, `${Math.round(f * 100)}%`, 10.5, "middle", 700)}
         </>
       );
     }
-    case "pump":
+    case "pump": {
+      const max = num(params, "max", 150);
+      const f = fin(live?.out) ? clamp(live!.out / max, 0, 1) : 0;
+      const spin = fin(live?.out) && f > 0.002;
+      const dur = (1.4 - 1.15 * f).toFixed(2);
+      const py = cy + 2;
       return (
         <>
-          <circle cx={cx} cy={cy + 2} r={22} fill="#fff" stroke={stroke} strokeWidth={1.8} />
-          <path d={`M${cx} ${cy - 20}H${w - 6}M${cx - 16} ${cy + 18}L${cx} ${cy + 2}L${cx + 16} ${cy + 18}`} fill="none" stroke={stroke} strokeWidth={1.8} strokeLinejoin="round" />
+          <circle cx={cx} cy={py} r={22} fill="#fff" stroke={stroke} strokeWidth={1.8} />
+          <path d={`M${cx} ${cy - 20}H${w - 6}M${cx - 16} ${cy + 18}L${cx} ${py}L${cx + 16} ${cy + 18}`} fill="none" stroke={stroke} strokeWidth={1.8} strokeLinejoin="round" />
+          {fin(live?.out) && (
+            <g className={spin ? "spin" : ""} style={{ transformOrigin: `${cx}px ${py}px`, animationDuration: `${dur}s` }}>
+              <path d={`M${cx - 13} ${py}H${cx + 13}M${cx} ${py - 13}V${py + 13}`} stroke="#2a6bd6" strokeWidth={2.2} strokeLinecap="round" />
+              <circle cx={cx} cy={py} r={3} fill="#2a6bd6" />
+            </g>
+          )}
         </>
       );
-    case "heater":
+    }
+    case "heater": {
+      const max = num(params, "max", 10);
+      const f = fin(live?.out) ? clamp(live!.out / max, 0, 1) : 0;
       return (
         <>
           {box}
+          {f > 0.01 && <rect x={3} y={3} width={w - 6} height={h - 6} rx={2} fill="#ff5a2a" opacity={0.12 + 0.4 * f} className="glow" />}
           <path d={`M10 ${cy + 8}H${w - 10}`} stroke="#9fb1cc" strokeWidth={1} />
-          <path d={`M10 ${cy + 8}q5 -16 10 0t10 0t10 0t10 0t10 0`} fill="none" stroke="#d6502a" strokeWidth={2} />
+          <path d={`M10 ${cy + 8}q5 -16 10 0t10 0t10 0t10 0t10 0`} fill="none" stroke={f > 0.01 ? "#ff3d10" : "#d6502a"} strokeWidth={2 + f} />
           {txt(cx, cy - 13, "kW", 11, "middle", 700)}
         </>
       );
+    }
     case "stock":
       return (
         <>
@@ -478,6 +582,7 @@ export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Pa
               <circle cx={cx} cy={cy} r={24} fill="#fff" stroke={stroke} strokeWidth={1.6} />
               <circle cx={cx} cy={cy} r={4} fill={stroke} />
               <path d={`M${cx - 15} ${cy - 15}A21 21 0 0 1 ${cx + 16} ${cy - 14}`} fill="none" stroke={ROT} strokeWidth={1.4} markerEnd="url(#arrow-n)" />
+              {fin(live?.th) && <path d={`M${cx} ${cy}L${cx} ${cy - 22}`} stroke={ROT} strokeWidth={2.6} strokeLinecap="round" transform={`rotate(${(live!.th * 180) / Math.PI} ${cx} ${cy})`} />}
               {txt(cx, cy + 14, `J=${fmt(v)}`, 10.5)}
             </>
           ) : (
@@ -671,6 +776,7 @@ export function SymbolArt({ symbol, params, w, h }: { symbol: string; params: Pa
           <path d={`M0 14H${cx}V${cy - 28}M0 ${h - 14}H${cx}V${cy + 28}`} fill="none" stroke={ELEC} strokeWidth={1.8} />
           <path d={`M${cx + 28} ${cy}H${w}`} stroke={ROT} strokeWidth={2.4} />
           <circle cx={cx} cy={cy} r={28} fill="#fff" stroke={stroke} strokeWidth={1.8} />
+          {fin(live?.th) && <path d={`M${cx} ${cy}L${cx} ${cy - 25}`} stroke={ROT} strokeWidth={2.6} strokeLinecap="round" transform={`rotate(${(live!.th * 180) / Math.PI} ${cx} ${cy})`} />}
           {txt(cx, cy, "M", 22, "middle", 600)}
           {txt(10, 25, "+", 12, "middle", 700)}
           {txt(10, h - 25, "−", 12, "middle", 700)}

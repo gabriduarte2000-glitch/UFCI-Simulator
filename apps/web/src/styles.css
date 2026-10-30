@@ -1463,3 +1463,104 @@ th {
     display: none;
   }
 }
+
+/* ------- animações dos símbolos (rodam só durante a simulação) */
+@keyframes wave-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(24px);
+  }
+}
+.wave {
+  animation: wave-slide 2.4s linear infinite;
+}
+@keyframes spin-around {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin-around 1s linear infinite;
+}
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-34px);
+    opacity: 0;
+  }
+}
+.bubble {
+  animation: bubble-rise 1.4s ease-in infinite;
+}
+@keyframes steam-up {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-26px) scale(1.5);
+    opacity: 0;
+  }
+}
+.steam {
+  animation: steam-up 1.8s ease-out infinite;
+}
+@keyframes drip-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+.drip {
+  animation: drip-fall 0.9s ease-in infinite;
+}
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.glow {
+  animation: glow-pulse 1.1s ease-in-out infinite;
+}
+@keyframes flow-march {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.wire-flow {
+  fill: none;
+  stroke-dasharray: 5 11;
+  stroke-linecap: round;
+  animation: flow-march var(--dur, 1s) linear infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wave,
+  .spin,
+  .bubble,
+  .steam,
+  .drip,
+  .glow,
+  .wire-flow {
+    animation: none;
+  }
+}

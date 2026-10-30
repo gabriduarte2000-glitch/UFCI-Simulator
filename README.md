@@ -17,6 +17,7 @@ Fases 0 a 5 do plano (Documento Mestre): controle, processos industriais e empre
 - **Eletromecânico**: motor CC (armadura com indutância, torque e força contra-eletromotriz) e servo de posição com PID.
 - Os componentes físicos se ligam por fios de cor própria (verde: translação, roxo: rotação, laranja: elétrico) e as grandezas viram sinais pelas saídas dos componentes. O montador usa a analogia força-corrente e a análise nodal modificada, com os estados de cada massa, mola, capacitor e indutor.
 - Situações físicas: massa-mola-amortecedor, suspensão de um quarto de carro, eixo flexível com dois volantes, circuito RLC, filtros RC, motor CC com carga, servo de posição e motor com redutor.
+- **Animação ao vivo**: os tanques sobem e descem conforme o nível, a água muda de azul para vermelho com a temperatura (tanque aquecido, caldeira e, no tanque simples, pela entrada "Temperatura da água", só visual), bolhas e vapor perto da fervura, bomba girando, válvula enchendo conforme a abertura, resistência brilhando, eixos girando e fios com a água correndo nas vazões em L/min. Os tanques crescem de leve com a altura e a área.
 - Unidade de tempo selecionável (s, min, h, dias) para os rótulos; os blocos de processo usam segundos nas equações.
 - Motor numérico próprio: Euler, RK4 e RK45 (Dormand-Prince adaptativo), com tratamento exato de descontinuidades e detecção de laço algébrico.
 - Edição ao vivo: mudar um parâmetro com a simulação rodando continua do estado atual e marca o instante no gráfico.
