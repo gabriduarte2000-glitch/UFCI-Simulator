@@ -37,6 +37,7 @@ const P: Record<string, string> = {
   table: "M4 5h16v14H4zM4 10h16M4 15h16M10 5v14",
   gauge: "M4 17a8 8 0 1116 0M12 17l4-6",
   build: "M4 6h6v5H4zM14 13h6v5h-6zM10 8.5h2.5a1.5 1.5 0 011.5 1.5v3",
+  cloud: "M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 8.5 4.5 4.5 0 0 1 17.5 18z",
   sigma: "M18 5H7l6 7-6 7h11",
   book: "M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h10",
 };

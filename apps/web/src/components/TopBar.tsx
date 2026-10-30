@@ -68,6 +68,9 @@ export function TopBar() {
               <button role="menuitem" onClick={() => file.current?.click()}>
                 <Icon name="open" /> Abrir arquivo
               </button>
+              <button role="menuitem" onClick={() => useUi.getState().setCloudOpen(true)}>
+                <Icon name="cloud" /> Nuvem
+              </button>
               <button role="menuitem" onClick={() => download(`${safeName(name)}.ufci.json`, projectToFile(useProject.getState().project))}>
                 <Icon name="save" /> Salvar em arquivo
               </button>
@@ -84,6 +87,9 @@ export function TopBar() {
         </button>
         <button className="btn" onClick={() => download(`${safeName(name)}.ufci.json`, projectToFile(useProject.getState().project))} title="Baixa o projeto como arquivo. Guarde uma cópia: é o seu backup.">
           <Icon name="save" /> <span className="lbl">Salvar</span>
+        </button>
+        <button className="btn" title="Salvar e abrir projetos na nuvem" onClick={() => useUi.getState().setCloudOpen(true)}>
+          <Icon name="cloud" /> <span className="lbl">Nuvem</span>
         </button>
         <input
           ref={file}

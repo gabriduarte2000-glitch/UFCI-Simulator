@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "@ufci/engine": "workspace:*",
     "@xyflow/react": "^12.8.0",
     "katex": "^0.19.1",

@@ -33,6 +33,10 @@ interface Ui {
   chartSignal: number[];
   chartMode: ChartMode;
   mathTab: MathTab;
+  cloudOpen: boolean;
+  cloudId: string | null;
+  setCloudOpen(v: boolean): void;
+  setCloudId(id: string | null): void;
   setMathTab(t: MathTab): void;
   setPage(p: Page): void;
   setLeftOpen(v: boolean): void;
@@ -56,6 +60,10 @@ export const useUi = create<Ui>((set) => ({
   chartSignal: [],
   chartMode: "unit",
   mathTab: "analise",
+  cloudOpen: false,
+  cloudId: null,
+  setCloudOpen: (cloudOpen) => set({ cloudOpen }),
+  setCloudId: (cloudId) => set({ cloudId }),
   setMathTab: (mathTab) => set({ mathTab }),
   setPage: (page) => set({ page }),
   setLeftOpen: (leftOpen) => set({ leftOpen }),
