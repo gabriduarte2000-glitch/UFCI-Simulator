@@ -146,8 +146,25 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
       return { w: 184, h: Math.max(56, 26 + lines.length * 16) };
     }
     default:
+      if (isGeneric(symbol)) return genericSize(symbol);
       return semiSize(symbol, p) ?? { w: 92, h: 56 };
   }
+}
+
+// Símbolo genérico dos componentes novos: "g:texto" ou "g:texto|subtexto" (texto grande e legenda)
+// e "gf:numerador|denominador" (fração).
+const isGeneric = (symbol: string) => symbol.startsWith("g:") || symbol.startsWith("gf:");
+function genericParts(symbol: string): { frac: boolean; a: string; b: string } {
+  const frac = symbol.startsWith("gf:");
+  const body = symbol.slice(frac ? 3 : 2);
+  const i = body.indexOf("|");
+  return { frac, a: i < 0 ? body : body.slice(0, i), b: i < 0 ? "" : body.slice(i + 1) };
+}
+function genericSize(symbol: string): NodeSize {
+  const { frac, a, b } = genericParts(symbol);
+  const wa = a.length * (frac ? 7.4 : 10.5),
+    wb = b.length * (frac ? 7.4 : 6.6);
+  return { w: Math.round(Math.min(220, Math.max(88, Math.max(wa, wb) + 28))), h: b ? 64 : 56 };
 }
 
 /** Quebra o texto de uma nota em linhas curtas. */
@@ -793,6 +810,28 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
         </>
       );
     default: {
+      if (isGeneric(symbol)) {
+        const { frac, a, b } = genericParts(symbol);
+        return (
+          <>
+            {box}
+            {frac ? (
+              <>
+                {txt(cx, cy - 12, a, 12.5)}
+                <line x1={8} y1={cy} x2={w - 8} y2={cy} stroke={stroke} strokeWidth={1.3} />
+                {txt(cx, cy + 12, b, 12.5)}
+              </>
+            ) : b ? (
+              <>
+                {txt(cx, cy - 8, a, a.length > 6 ? 14 : 18, "middle", 600)}
+                {txt(cx, cy + 16, b, 10.5, "middle", 400)}
+              </>
+            ) : (
+              txt(cx, cy, a, a.length > 6 ? 14 : 19, "middle", 600)
+            )}
+          </>
+        );
+      }
       const art = semiArt(symbol, params, w, h, live);
       if (art) return <>{art}</>;
       return (

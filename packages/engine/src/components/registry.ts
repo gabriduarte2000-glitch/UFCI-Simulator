@@ -41,7 +41,7 @@ export interface BlockImpl {
   discrete?: BlockDiscrete;
 }
 
-export type CategoryId = "sources" | "math" | "control" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi";
+export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi";
 
 export interface ComponentDef {
   type: string;
@@ -61,24 +61,43 @@ export interface ComponentDef {
   physical?: { kind: string };
   /** Valor padrão do rótulo. */
   labelPrefix: string;
+  /** Palavras extras para a busca (sinônimos, nomes em inglês, usos). */
+  keywords?: string;
 }
 
-export const CATEGORIES: { id: CategoryId; label: string; available: boolean }[] = [
-  { id: "sources", label: "Fontes de sinal", available: true },
-  { id: "math", label: "Operadores", available: true },
-  { id: "control", label: "Controle", available: true },
-  { id: "nonlinear", label: "Não linearidades", available: true },
-  { id: "sinks", label: "Saídas e medição", available: true },
-  { id: "process", label: "Processos industriais", available: true },
-  { id: "business", label: "Empresarial", available: true },
-  { id: "notes", label: "Anotações", available: true },
-  { id: "mech", label: "Mecânico, translação", available: true },
-  { id: "rot", label: "Mecânico, rotação", available: true },
-  { id: "elec", label: "Elétrico", available: true },
-  { id: "electromech", label: "Eletromecânico", available: true },
-  { id: "semi", label: "Semicondutores e amplificadores", available: true },
-  { id: "dgate", label: "Digital: portas e lógica", available: true },
-  { id: "dseq", label: "Digital: sequenciais e CIs", available: true },
+export type GroupId = "signals" | "control" | "process" | "mechanical" | "electrical" | "digital" | "other";
+
+/** Blocos de topo da biblioteca. Cada um reúne várias categorias. */
+export const GROUPS: { id: GroupId; label: string; hint: string }[] = [
+  { id: "signals", label: "Sinais e matemática", hint: "Fontes, operadores, funções, roteamento, medição" },
+  { id: "control", label: "Controle e filtros", hint: "PID, funções de transferência, filtros, controle digital, não linearidades" },
+  { id: "process", label: "Processos e negócios", hint: "Tanques, caldeira, bombas, estoque, filas" },
+  { id: "mechanical", label: "Mecânico", hint: "Translação e rotação" },
+  { id: "electrical", label: "Elétrico e eletrônica", hint: "Circuitos, motores, semicondutores e amplificadores" },
+  { id: "digital", label: "Digital", hint: "Portas, flip-flops, contadores e CIs" },
+  { id: "other", label: "Anotações", hint: "Texto no quadro" },
+];
+
+export const CATEGORIES: { id: CategoryId; label: string; group: GroupId; available: boolean }[] = [
+  { id: "sources", label: "Fontes de sinal", group: "signals", available: true },
+  { id: "math", label: "Operadores", group: "signals", available: true },
+  { id: "mathfn", label: "Funções matemáticas", group: "signals", available: true },
+  { id: "routing", label: "Roteamento e lógica", group: "signals", available: true },
+  { id: "sinks", label: "Saídas e medição", group: "signals", available: true },
+  { id: "control", label: "Controladores e modelos", group: "control", available: true },
+  { id: "filters", label: "Filtros e sistemas de 2ª ordem", group: "control", available: true },
+  { id: "discrete", label: "Controle digital (amostrado)", group: "control", available: true },
+  { id: "nonlinear", label: "Não linearidades", group: "control", available: true },
+  { id: "process", label: "Processos industriais", group: "process", available: true },
+  { id: "business", label: "Empresarial", group: "process", available: true },
+  { id: "mech", label: "Translação", group: "mechanical", available: true },
+  { id: "rot", label: "Rotação", group: "mechanical", available: true },
+  { id: "elec", label: "Circuitos elétricos", group: "electrical", available: true },
+  { id: "electromech", label: "Eletromecânico", group: "electrical", available: true },
+  { id: "semi", label: "Semicondutores e amplificadores", group: "electrical", available: true },
+  { id: "dgate", label: "Portas e lógica", group: "digital", available: true },
+  { id: "dseq", label: "Sequenciais e CIs", group: "digital", available: true },
+  { id: "notes", label: "Anotações", group: "other", available: true },
 ];
 
 const registry = new Map<string, ComponentDef>();

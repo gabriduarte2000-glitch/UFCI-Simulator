@@ -4,10 +4,11 @@
 import { build, exampleFirstOrder, examplePidLoop } from "./examples";
 import { dcMotorLoad, flexibleShaft, geared, massSpringDamper, positionServo, quarterCar, rcFilters, rlcSeries } from "./situations-phys";
 import { rainTreatment } from "./situations-tcc";
+import { chirpResonance, digitalPid, noisyFilter, notchDemo, relayOven } from "./situations-ctrl";
 import { commonEmitter, counterDisplay, dacStaircase, fullAdderGates, halfWaveRectifier, invertingAmp, mosfetSwitch, norLatch, thermostat, timer555Astable, zenerRegulator } from "./situations-semi";
 import type { ProjectIR } from "./types";
 
-export type SituationGroup = "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
+export type SituationGroup = "control" | "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
 
 export interface Situation {
   id: string;
@@ -267,6 +268,11 @@ export const SITUATIONS: Situation[] = [
   { id: "sr-latch", group: "digital", title: "Latch SR com portas NOR", description: "Duas portas NOR com realimentação cruzada guardam 1 bit de memória.", explore: "O pulso em S põe Q em 1. Ele continua em 1 quando S volta a 0. O pulso em R zera.", make: norLatch },
   { id: "dac-stair", group: "digital", title: "Contador com conversor D/A", description: "O contador de 4 bits alimenta um DAC e gera uma rampa em escada de 0 a 5 V.", explore: "Aumente os bits do contador e do DAC para 6 e veja a escada ficar mais fina.", make: dacStaircase },
   { id: "thermostat", group: "digital", title: "Termostato liga-desliga com histerese", description: "Um comparador com histerese liga e desliga a resistência de um tanque d'água entre 58 e 62 °C.", explore: "Aumente a histerese e veja a temperatura oscilar numa faixa maior, com menos chaveamentos.", make: thermostat },
+  { id: "digital-pid", group: "control", title: "Controle digital: PID discreto com ZOH", description: "PID amostrado a cada 50 ms controlando uma planta de 2ª ordem, com saída limitada e anti-windup.", explore: "Aumente o período de amostragem Ts e veja a malha perder estabilidade.", make: digitalPid },
+  { id: "noisy-filter", group: "control", title: "Filtro Butterworth contra ruído", description: "Uma senoide de 0,5 Hz com ruído passa por um passa-baixa de 3ª ordem.", explore: "Baixe a frequência de corte até a senoide começar a atenuar.", make: noisyFilter },
+  { id: "notch", group: "control", title: "Filtro notch tirando uma interferência", description: "Um sinal lento misturado com uma interferência de 10 Hz, que o notch elimina.", explore: "Mude a frequência do notch e veja a interferência voltar.", make: notchDemo },
+  { id: "relay-oven", group: "control", title: "Forno com controle liga-desliga (relé)", description: "Um relé com histerese liga e desliga o aquecimento em torno da temperatura desejada.", explore: "Aumente a histerese e veja a temperatura oscilar numa faixa maior.", make: relayOven },
+  { id: "chirp", group: "control", title: "Varredura de frequência numa ressonância", description: "Um sinal cuja frequência sobe de 0,2 a 3 Hz excita um sistema ressonante em 1 Hz.", explore: "Diminua o amortecimento ζ e veja o pico ficar maior.", make: chirpResonance },
   { id: "first-order", group: "basic", title: "Resposta de 1ª ordem", description: "Degrau aplicado a G(s) = 1/(s+1).", explore: "Troque a constante de tempo e veja o tempo de subida mudar.", make: exampleFirstOrder },
   { id: "pid-loop", group: "basic", title: "Malha fechada com PID", description: "PID controlando uma planta de 2ª ordem.", explore: "Mude Kp, Ki e Kd com a simulação rodando.", make: examplePidLoop },
   { id: "rain-treatment", group: "industry", title: "Tratamento de água pluvial (TCC)", description: "Reservatório, bomba, pré-tratamento, decantador, caixa de água decantada, cloração com filtro e saída, com as válvulas 1, 3, 4 e 5.", explore: "Na página Gráficos, mexa nos controles deslizantes das bombas e das válvulas e veja os níveis de cada tanque.", make: rainTreatment },
@@ -280,6 +286,7 @@ export const SITUATIONS: Situation[] = [
 ];
 
 export const SITUATION_GROUPS: { id: SituationGroup; label: string }[] = [
+  { id: "control", label: "Controle, filtros e digital" },
   { id: "mech", label: "Mecânica" },
   { id: "elec", label: "Circuitos elétricos" },
   { id: "electromech", label: "Eletromecânica" },
