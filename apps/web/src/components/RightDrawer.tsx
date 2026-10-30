@@ -1,5 +1,5 @@
 import { useProject } from "../store";
-import { useUi } from "../ui";
+import { useCompact, useUi } from "../ui";
 import { Icon } from "./Icon";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { SimControls } from "./SimControls";
@@ -10,8 +10,10 @@ export function RightDrawer() {
   const tab = useUi((s) => s.rightTab);
   const setOpen = useUi((s) => s.setRightOpen);
   const openRight = useUi((s) => s.openRight);
+  const compact = useCompact();
   const hasSel = useProject((s) => s.selectedNodes.length + s.selectedEdges.length > 0);
 
+  if (!open && compact) return null;
   if (!open)
     return (
       <div className="rail right-rail" role="toolbar" aria-label="Painéis laterais">

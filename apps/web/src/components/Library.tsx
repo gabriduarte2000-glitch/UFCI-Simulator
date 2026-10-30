@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { allDefs, CATEGORIES, defaultParams, SITUATIONS, SITUATION_GROUPS, type ComponentDef } from "@ufci/engine";
 import { loadSituation } from "../loadSituation";
-import { useUi } from "../ui";
+import { isCompact, useUi } from "../ui";
 import { useAddAtCenter } from "./Canvas";
 import { Icon } from "./Icon";
 import { nodeSize, SymbolArt } from "./Symbols";
@@ -66,7 +66,10 @@ export function Library() {
                             e.dataTransfer.setData("application/ufci-type", d.type);
                             e.dataTransfer.effectAllowed = "copy";
                           }}
-                          onClick={() => add(d.type)}
+                          onClick={() => {
+                            add(d.type);
+                            if (isCompact()) setLeftOpen(false);
+                          }}
                           title={`${d.description}\nArraste para a área de trabalho ou clique para adicionar.`}
                         >
                           <Mini def={d} />
@@ -91,7 +94,10 @@ export function Library() {
                 <span>{g.label}</span>
               </div>
               {SITUATIONS.filter((x) => x.group === g.id).map((x) => (
-                <button key={x.id} className="example-card" onClick={() => loadSituation(x)}>
+                <button key={x.id} className="example-card" onClick={() => {
+                    loadSituation(x);
+                    if (isCompact()) setLeftOpen(false);
+                  }}>
                   <strong>{x.title}</strong>
                   <span>{x.description}</span>
                   <em>Explore: {x.explore}</em>

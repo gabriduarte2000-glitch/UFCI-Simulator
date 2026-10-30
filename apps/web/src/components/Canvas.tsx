@@ -14,11 +14,12 @@ import {
 } from "@xyflow/react";
 import { checkPortPair, getDef, portsOf, SITUATIONS } from "@ufci/engine";
 import { nodeSize } from "./Symbols";
+import { Icon } from "./Icon";
 import { loadSituation } from "../loadSituation";
 import { onProjectEvent, useProject } from "../store";
 import { useDiag, INCOMPLETE_CODES } from "../diagnostics";
 import { useLive } from "../live";
-import { useUi } from "../ui";
+import { useCompact, useUi } from "../ui";
 import { BlockNode, type BlockNodeT } from "./BlockNode";
 import { WireEdge, type WireEdgeT } from "./WireEdge";
 import { CanvasToolbar } from "./CanvasToolbar";
@@ -52,6 +53,7 @@ function Inner() {
   const runtime = useLive((s) => s.runtimeDiagnostics);
   const snap = useUi((s) => s.snap);
   const tool = useUi((s) => s.tool);
+  const compact = useCompact();
   const rf = useReactFlow();
   const wrapper = useRef<HTMLDivElement>(null);
 
@@ -261,9 +263,11 @@ function Inner() {
         maxZoom={2.5}
         deleteKeyCode={["Backspace", "Delete"]}
         multiSelectionKeyCode={["Shift", "Meta", "Control"]}
-        selectionOnDrag={tool === "select"}
+        selectionOnDrag={!compact && tool === "select"}
         selectionMode={SelectionMode.Partial}
-        panOnDrag={tool === "pan" ? true : [1, 2]}
+        panOnDrag={compact || tool === "pan" ? true : [1, 2]}
+        connectionRadius={28}
+        nodeDragThreshold={compact ? 4 : 1}
         panOnScroll={false}
         zoomOnScroll
         zoomOnDoubleClick={false}
@@ -272,9 +276,10 @@ function Inner() {
         defaultViewport={{ x: 40, y: 40, zoom: 1 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1.4} color="#b9c6da" />
-        <MiniMap pannable zoomable style={{ width: 150, height: 100 }} className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />
+        {!compact && <MiniMap pannable zoomable style={{ width: 150, height: 100 }} className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />}
       </ReactFlow>
       <CanvasToolbar />
+      {compact && <MobileDock />}
       <DiagnosticsPanel />
       {empty && (
         <div className="empty-hint">
@@ -291,6 +296,65 @@ function Inner() {
       )}
       <Notice />
     </div>
+  );
+}
+
+/** Botões flutuantes e barra de ações para telas de toque. */
+function MobileDock() {
+  const hasNode = useProject((s) => s.selectedNodes.length > 0);
+  const hasSel = useProject((s) => s.selectedNodes.length + s.selectedEdges.length > 0);
+  const ui = useUi.getState;
+  return (
+    <>
+      <div className="fab-col">
+        <button
+          className="fab primary"
+          aria-label="Adicionar componente"
+          onClick={() => {
+            ui().setRightOpen(false);
+            ui().setLeftOpen(true);
+          }}
+        >
+          <Icon name="plus" size={22} />
+        </button>
+        <button
+          className="fab"
+          aria-label="Abrir controles da simulação"
+          onClick={() => {
+            ui().setLeftOpen(false);
+            ui().openRight("sim");
+          }}
+        >
+          <Icon name="play" size={20} />
+        </button>
+      </div>
+      {hasSel && (
+        <div className="sel-bar" role="toolbar" aria-label="Ações do item selecionado">
+          <button
+            onClick={() => {
+              ui().setLeftOpen(false);
+              ui().openRight("props");
+            }}
+          >
+            <Icon name="sliders" size={18} /> Propriedades
+          </button>
+          {hasNode && (
+            <button
+              onClick={() => {
+                const st = useProject.getState();
+                st.copy();
+                st.paste();
+              }}
+            >
+              <Icon name="duplicate" size={18} /> Duplicar
+            </button>
+          )}
+          <button className="danger" onClick={() => useProject.getState().deleteSelection()}>
+            <Icon name="trash" size={18} /> Excluir
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

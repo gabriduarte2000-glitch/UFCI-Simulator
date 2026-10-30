@@ -9,7 +9,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { GraficosPage } from "./pages/GraficosPage";
 import { TabelasPage } from "./pages/TabelasPage";
 import { IndicadoresPage } from "./pages/IndicadoresPage";
-import { useUi } from "./ui";
+import { BottomNav } from "./components/BottomNav";
+import { useCompact, useUi } from "./ui";
 import "./live";
 import "./diagnostics";
 
@@ -28,23 +29,49 @@ function LeftRail() {
 export function App() {
   const page = useUi((s) => s.page);
   const leftOpen = useUi((s) => s.leftOpen);
+  const rightOpen = useUi((s) => s.rightOpen);
+  const setLeftOpen = useUi((s) => s.setLeftOpen);
+  const setRightOpen = useUi((s) => s.setRightOpen);
+  const compact = useCompact();
   return (
     <ReactFlowProvider>
       <div className="app">
         <TopBar />
         {/* A montagem fica sempre montada (só escondida) para manter o zoom e a posição da vista. */}
         <div className="main" hidden={page !== "montagem"}>
-          {leftOpen ? <Library /> : <LeftRail />}
-          <div className="center">
-            <Canvas />
-          </div>
-          <RightDrawer />
+          {compact ? (
+            <>
+              <div className="center">
+                <Canvas />
+              </div>
+              {(leftOpen || rightOpen) && (
+                <div
+                  className="sheet-scrim"
+                  onClick={() => {
+                    setLeftOpen(false);
+                    setRightOpen(false);
+                  }}
+                />
+              )}
+              {leftOpen && <Library />}
+              <RightDrawer />
+            </>
+          ) : (
+            <>
+              {leftOpen ? <Library /> : <LeftRail />}
+              <div className="center">
+                <Canvas />
+              </div>
+              <RightDrawer />
+            </>
+          )}
         </div>
         {page === "dashboard" && <DashboardPage />}
         {page === "graficos" && <GraficosPage />}
         {page === "tabelas" && <TabelasPage />}
         {page === "indicadores" && <IndicadoresPage />}
         <StatusBar />
+        <BottomNav />
       </div>
     </ReactFlowProvider>
   );

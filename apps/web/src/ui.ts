@@ -1,4 +1,20 @@
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
+
+/** Telas estreitas (celular, tablet em pé): painéis viram folhas e a navegação vai para baixo. */
+export const COMPACT_QUERY = "(max-width: 900px)";
+export const isCompact = () => typeof window !== "undefined" && window.matchMedia(COMPACT_QUERY).matches;
+export function useCompact(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(COMPACT_QUERY);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    isCompact,
+    () => false,
+  );
+}
 
 export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores";
 /** Como os sinais escolhidos se distribuem nos gráficos. */
@@ -28,7 +44,7 @@ interface Ui {
 
 export const useUi = create<Ui>((set) => ({
   page: "montagem",
-  leftOpen: true,
+  leftOpen: !isCompact(),
   rightOpen: false,
   rightTab: "props",
   showWireValues: true,

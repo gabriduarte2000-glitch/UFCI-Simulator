@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useProject } from "../store";
 import { useLive, sim } from "../live";
 import { download, fmtNum, projectToFile, safeName } from "../util";
@@ -23,6 +23,7 @@ export function TopBar() {
   const page = useUi((s) => s.page);
   const setPage = useUi((s) => s.setPage);
   const unit = useTimeUnit();
+  const [menu, setMenu] = useState(false);
 
   const confirmReplace = () => {
     const st = useProject.getState();
@@ -52,6 +53,27 @@ export function TopBar() {
         <span>Projeto:</span>
         <input value={name} onChange={(e) => useProject.getState().setName(e.target.value)} aria-label="Nome do projeto" />
       </label>
+      <div className="more-wrap">
+        <button className="btn icon" aria-label="Mais ações" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+          <Icon name="more" />
+        </button>
+        {menu && (
+          <>
+            <div className="menu-scrim" onClick={() => setMenu(false)} />
+            <div className="menu" role="menu" onClick={() => setMenu(false)}>
+              <button role="menuitem" onClick={() => confirmReplace() && useProject.getState().newProject()}>
+                <Icon name="file" /> Novo projeto
+              </button>
+              <button role="menuitem" onClick={() => file.current?.click()}>
+                <Icon name="open" /> Abrir arquivo
+              </button>
+              <button role="menuitem" onClick={() => download(`${safeName(name)}.ufci.json`, projectToFile(useProject.getState().project))}>
+                <Icon name="save" /> Salvar em arquivo
+              </button>
+            </div>
+          </>
+        )}
+      </div>
       <div className="top-actions">
         <button className="btn" title="Novo projeto" onClick={() => confirmReplace() && useProject.getState().newProject()}>
           <Icon name="file" /> <span className="lbl">Novo</span>
@@ -78,13 +100,14 @@ export function TopBar() {
       </div>
       <div className="run-actions">
         <button className="btn run" onClick={() => (running ? sim.pause() : sim.play())} aria-label={running ? "Pausar" : "Simular"}>
-          <Icon name={running ? "pause" : "play"} /> {running ? "Pausar" : status === "paused" ? "Continuar" : "Simular"}
+          <Icon name={running ? "pause" : "play"} /> <span className="run-lbl">{running ? "Pausar" : status === "paused" ? "Continuar" : "Simular"}</span>
         </button>
         <button className="btn icon stop" disabled={status === "idle"} onClick={() => sim.stop()} title="Parar e voltar ao início" aria-label="Parar">
           <Icon name="stop" />
         </button>
         <div className="time-chip" aria-live="off">
-          Tempo: {fmtNum(t, 4)} {unit}
+          <span className="time-lbl">Tempo: </span>{" "}
+          {fmtNum(t, 4)} {unit}
         </div>
       </div>
     </header>
