@@ -104,27 +104,36 @@ export default function AssistantPanel() {
   };
 
   return (
-    <aside className="assist" role="dialog" aria-label="Assistente">
+    <aside className="assist" role="dialog" aria-label="Chat com o assistente">
       <div className="assist-head">
-        <div>
-          <h2>Assistente</h2>
-          <span className="muted">Tira dúvidas e confere sua montagem</span>
+        <span className="assist-avatar" aria-hidden="true">
+          <Icon name="sparkle" size={16} />
+        </span>
+        <div className="assist-title">
+          <strong>Assistente</strong>
+          <span>
+            <i className="online" /> pronto para ajudar
+          </span>
         </div>
-        <div className="assist-head-actions">
-          {messages.length > 0 && (
-            <button className="btn" onClick={clear} title="Limpar a conversa">
-              Limpar
-            </button>
-          )}
-          <button className="btn icon" aria-label="Fechar o assistente" onClick={() => setOpen(false)}>
-            ×
+        {messages.length > 0 && (
+          <button className="assist-x" onClick={clear} title="Limpar a conversa" aria-label="Limpar a conversa">
+            Limpar
           </button>
-        </div>
+        )}
+        <button className="assist-x" aria-label="Fechar o assistente" onClick={() => setOpen(false)}>
+          <Icon name="close" size={16} />
+        </button>
       </div>
 
       <div className="assist-body">
         {messages.map((m, i) => (
-          <div key={i} className={`chat-msg ${m.role === "user" ? "me" : "bot"}${m.local ? " local" : ""}`}>
+          <div key={i} className={`chat-row ${m.role === "user" ? "me" : "bot"}`}>
+            {m.role !== "user" && (
+              <span className="chat-avatar" aria-hidden="true">
+                <Icon name="sparkle" size={12} />
+              </span>
+            )}
+            <div className={`chat-msg ${m.role === "user" ? "me" : "bot"}`}>
             {m.role === "user" ? m.text : <Rich text={m.text} />}
             {m.actions && m.actions.length > 0 && (
               <div className="chat-actions">
@@ -135,9 +144,21 @@ export default function AssistantPanel() {
                 ))}
               </div>
             )}
+            </div>
           </div>
         ))}
-        {busy && <div className="chat-msg bot typing">Pensando…</div>}
+        {busy && (
+          <div className="chat-row bot">
+            <span className="chat-avatar" aria-hidden="true">
+              <Icon name="sparkle" size={12} />
+            </span>
+            <div className="chat-msg bot typing" aria-label="Digitando">
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+        )}
         {needLogin && (
           <button
             className="btn primary"
@@ -173,7 +194,7 @@ export default function AssistantPanel() {
             value={text}
             rows={1}
             maxLength={1500}
-            placeholder="Pergunte ou peça: monte um filtro RC de 1 kHz…"
+            placeholder="Escreva uma mensagem…"
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

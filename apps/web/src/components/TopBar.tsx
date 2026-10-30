@@ -4,7 +4,6 @@ import { useLive, sim } from "../live";
 import { download, fmtNum, projectToFile, safeName } from "../util";
 import { Icon } from "./Icon";
 import { useUi, type Page } from "../ui";
-import { useAssist, useAssistAlert } from "../assistant";
 import { useTimeUnit } from "../timeunit";
 
 const PAGES: { id: Page; label: string; icon: string }[] = [
@@ -26,7 +25,6 @@ export function TopBar() {
   const setPage = useUi((s) => s.setPage);
   const unit = useTimeUnit();
   const [menu, setMenu] = useState(false);
-  const alert = useAssistAlert();
 
   const confirmReplace = () => {
     const st = useProject.getState();
@@ -70,9 +68,6 @@ export function TopBar() {
               <button role="menuitem" onClick={() => file.current?.click()}>
                 <Icon name="open" /> Abrir arquivo
               </button>
-              <button role="menuitem" onClick={() => useAssist.getState().setOpen(true)}>
-                <Icon name="sparkle" /> Assistente
-              </button>
               <button role="menuitem" onClick={() => useUi.getState().setCloudOpen(true)}>
                 <Icon name="cloud" /> Nuvem
               </button>
@@ -92,10 +87,6 @@ export function TopBar() {
         </button>
         <button className="btn" onClick={() => download(`${safeName(name)}.ufci.json`, projectToFile(useProject.getState().project))} title="Baixa o projeto como arquivo. Guarde uma cópia: é o seu backup.">
           <Icon name="save" /> <span className="lbl">Salvar</span>
-        </button>
-        <button className="btn assist-btn" title="Assistente: tira dúvidas e confere a montagem" onClick={() => useAssist.getState().setOpen(!useAssist.getState().open)}>
-          <Icon name="sparkle" /> <span className="lbl">Assistente</span>
-          {alert && <i className="alert-dot" aria-label="Há avisos na montagem" />}
         </button>
         <button className="btn" title="Salvar e abrir projetos na nuvem" onClick={() => useUi.getState().setCloudOpen(true)}>
           <Icon name="cloud" /> <span className="lbl">Nuvem</span>

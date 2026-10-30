@@ -1,4 +1,3 @@
-import { useAssist, useAssistAlert } from "../assistant";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Background,
@@ -277,7 +276,7 @@ function Inner() {
         defaultViewport={{ x: 40, y: 40, zoom: 1 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1.4} color="#b9c6da" />
-        {!compact && <MiniMap pannable zoomable style={{ width: 150, height: 100 }} className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />}
+        {!compact && <MiniMap position="bottom-left" pannable zoomable style={{ width: 150, height: 100 }} className="minimap" maskColor="rgba(15,26,46,0.12)" nodeColor="#7f93b2" />}
       </ReactFlow>
       <CanvasToolbar />
       {compact && <MobileDock />}
@@ -305,14 +304,9 @@ function MobileDock() {
   const hasNode = useProject((s) => s.selectedNodes.length > 0);
   const hasSel = useProject((s) => s.selectedNodes.length + s.selectedEdges.length > 0);
   const ui = useUi.getState;
-  const alert = useAssistAlert();
   return (
     <>
       <div className="fab-col">
-        <button className="fab" aria-label="Abrir o assistente" onClick={() => useAssist.getState().setOpen(true)}>
-          <Icon name="sparkle" size={20} />
-          {alert && <i className="alert-dot" />}
-        </button>
         <button
           className="fab primary"
           aria-label="Adicionar componente"
