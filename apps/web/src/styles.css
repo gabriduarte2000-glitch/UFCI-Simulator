@@ -2995,3 +2995,34 @@ th {
     min-height: 40px;
   }
 }
+
+.lib-fold {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 0 0;
+}
+.lib-fold button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  opacity: 0.8;
+}
+.lib-fold button:hover {
+  opacity: 1;
+  color: var(--text);
+  background: var(--line);
+}
+@media (max-width: 900px) {
+  .lib-fold button {
+    min-height: 34px;
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}

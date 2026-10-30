@@ -16,7 +16,8 @@ function Mini({ def }: { def: ComponentDef }) {
   );
 }
 
-const STORE = "ufci-lib-open";
+const STORE = "ufci-lib-open-v2";
+/** Tudo fechado por padrão. Guarda só o que o usuário abriu (grupos e subgrupos). */
 const loadOpen = (): Record<string, boolean> => {
   try {
     const v = JSON.parse(localStorage.getItem(STORE) ?? "null");
@@ -24,7 +25,7 @@ const loadOpen = (): Record<string, boolean> => {
   } catch {
     /* sem armazenamento: usa o padrão */
   }
-  return { signals: true };
+  return {};
 };
 
 /** Destaca no texto as palavras digitadas. */
@@ -64,7 +65,6 @@ export function Library() {
   const setLeftOpen = useUi((s) => s.setLeftOpen);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Record<string, boolean>>(loadOpen);
-  const [closedCat, setClosedCat] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const add = useAddAtCenter();
@@ -81,6 +81,9 @@ export function Library() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [q]);
+
+  const expandAll = () => setOpen(Object.fromEntries([...GROUPS.map((g) => [g.id, true]), ...CATEGORIES.map((c) => ["cat:" + c.id, true])]));
+  const collapseAll = () => setOpen({});
 
   const searching = q.trim().length > 0;
   const result = useMemo(() => (searching && tab === "comp" ? searchComponents(q) : null), [q, searching, tab]);
@@ -180,6 +183,16 @@ export function Library() {
       {tab === "comp" ? (
         <>
           <div className="lib-scroll" ref={scrollRef}>
+            {!result && (
+              <div className="lib-fold" role="group" aria-label="Abrir ou fechar todas as listas">
+                <button onClick={expandAll} title="Abrir todas as listas" aria-label="Abrir todas as listas">
+                  <Icon name="chevron" size={13} /> abrir tudo
+                </button>
+                <button onClick={collapseAll} title="Fechar todas as listas" aria-label="Fechar todas as listas">
+                  <Icon name="chevronUp" size={13} /> fechar tudo
+                </button>
+              </div>
+            )}
             {result ? (
               <>
                 {result.hits.length > 0 && <div className="lib-grid">{result.hits.map(item)}</div>}
@@ -232,11 +245,11 @@ export function Library() {
                     {isOpen && (
                       <div className="lib-block-body">
                         {cats.map(({ c, items }) => {
-                          const folded = cats.length > 1 && closedCat[c.id];
+                          const folded = cats.length > 1 && !open["cat:" + c.id];
                           return (
                             <Fragment key={c.id}>
                               {cats.length > 1 && (
-                                <button className="cat-head" aria-expanded={!folded} onClick={() => setClosedCat({ ...closedCat, [c.id]: !closedCat[c.id] })}>
+                                <button className="cat-head" aria-expanded={!folded} onClick={() => setOpen({ ...open, ["cat:" + c.id]: !open["cat:" + c.id] })}>
                                   <span>
                                     {c.label} <i>{items.length}</i>
                                   </span>
