@@ -45,6 +45,8 @@ export interface MathReport {
   /** Ordem do sistema linearizado (estados dinâmicos). */
   order: number;
   stable?: boolean;
+  /** G(s) = num/den em potências decrescentes de s, depois do cancelamento polo-zero. */
+  tf?: { num: number[]; den: number[] };
 }
 
 export interface MathOptions {
@@ -731,6 +733,7 @@ export function analyzeMath(ir: ProjectIR, opts: MathOptions = {}): MathReport {
   if (outIdx === undefined) outIdx = scopeSigs.find((i) => !srcSet.has(i)) ?? outIdxAll[0];
   let order = 0;
   let stable: boolean | undefined;
+  let tfOut: { num: number[]; den: number[] } | undefined;
   let chosenOut: string | undefined = outIdx !== undefined ? model.signals[outIdx].id : undefined;
   let chosenIn: string | undefined = chosenInput;
 
@@ -837,6 +840,7 @@ export function analyzeMath(ir: ProjectIR, opts: MathOptions = {}): MathReport {
         const tfSec = transferSection(A, b, c, d, nmx);
         sections.push(...tfSec.sections);
         stable = tfSec.stable;
+        tfOut = tfSec.tf;
       } else if (nmx > 40) {
         sections.push({ id: "tf", title: "Função de transferência", blocks: [{ kind: "note", text: "O sistema tem mais de 40 estados. A análise de polos e zeros foi omitida para manter a página rápida." }] });
       } else if (jIn < 0) {
@@ -859,7 +863,7 @@ export function analyzeMath(ir: ProjectIR, opts: MathOptions = {}): MathReport {
   });
   if (opRows.length) sections.push({ id: "op", title: "Valores no ponto de operação", lead: "Todas as grandezas do circuito no instante final da simulação com as fontes paradas.", blocks: [{ kind: "table", head: ["Grandeza", "Valor"], rows: opRows.slice(0, 120) }] });
 
-  return { ok: true, sections, inputs: inputsList, outputs: outputsList, input: chosenIn, output: chosenOut, order, stable };
+  return { ok: true, sections, inputs: inputsList, outputs: outputsList, input: chosenIn, output: chosenOut, order, stable, tf: tfOut };
 }
 
 /** Dá um nome a cada estado: procura o sinal que acompanha o estado um para um. */
@@ -899,7 +903,7 @@ function stateNames(model: CompiledModel, byId: Map<string, ComponentInstance>, 
   });
 }
 
-function transferSection(A: Mat, b: number[], c: number[], d: number, n: number): { sections: MathSection[]; stable?: boolean } {
+function transferSection(A: Mat, b: number[], c: number[], d: number, n: number): { sections: MathSection[]; stable?: boolean; tf?: { num: number[]; den: number[] } } {
   const sections: MathSection[] = [];
   let poles: Cx[];
   try {
@@ -1116,7 +1120,7 @@ function transferSection(A: Mat, b: number[], c: number[], d: number, n: number)
     }
     sections.push({ id: "degrau", title: "Resposta ao degrau (forma analítica)", lead: "A integral de convolução resolvida: transformada inversa de Laplace de G(s)/s.", blocks: sb });
   }
-  return { sections, stable: isStable };
+  return { sections, stable: isStable, tf: { num: Np, den: Dp } };
 }
 
 // ------------------------------------------------------------------------------------------------ pequenos sinais

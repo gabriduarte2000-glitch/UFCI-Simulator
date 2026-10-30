@@ -2138,3 +2138,224 @@ th {
     font-size: 10px;
   }
 }
+
+/* ------- equação para circuito */
+.seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  align-self: flex-start;
+  max-width: 100%;
+}
+.seg button {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.seg button.on {
+  background: var(--accent);
+  color: #fff;
+}
+.seg.small button {
+  padding: 5px 11px;
+  font-size: 12px;
+}
+.synth-wrap:not([hidden]) {
+  display: block;
+}
+.synth {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 980px;
+}
+.synth-in {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.synth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.synth-field textarea,
+.synth-field input {
+  width: 100%;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 15px;
+}
+.synth-field textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+.synth-row,
+.synth-ss {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.synth-ss .synth-hint {
+  grid-column: 1 / -1;
+}
+.synth-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.synth-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-btn {
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+}
+.chip-btn:hover {
+  border-color: var(--accent-2);
+}
+.synth-adv summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+}
+.synth-err {
+  margin: 0;
+}
+.synth-h {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+.synth-model {
+  padding: 12px 14px;
+}
+.synth-poles {
+  margin: 6px 0 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid;
+}
+.tag.ok {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.tag.warn {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.synth-real {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.synth-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+.synth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  min-width: 0;
+}
+.synth-card:hover:not(:disabled) {
+  border-color: var(--line-2);
+}
+.synth-card.on {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 1px var(--accent-2) inset;
+}
+.synth-card:disabled {
+  opacity: 0.55;
+}
+.synth-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.synth-vals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.synth-vals code {
+  font-size: 11px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  overflow-wrap: anywhere;
+}
+.synth-scale {
+  max-width: 260px;
+}
+.synth-check {
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 13px;
+  border: 1px solid;
+}
+.synth-check.ok {
+  border-color: var(--ok);
+  background: rgba(34, 197, 94, 0.08);
+}
+.synth-check.bad {
+  border-color: var(--err);
+  background: rgba(239, 68, 68, 0.08);
+}
+.synth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .seg {
+    width: 100%;
+  }
+  .seg button {
+    flex: 1;
+    padding: 9px 8px;
+  }
+  .synth-row,
+  .synth-ss {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .synth-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .synth-actions .btn {
+    flex: 1 1 100%;
+    height: 42px;
+  }
+  .synth-field textarea,
+  .synth-field input {
+    font-size: 16px;
+  }
+}

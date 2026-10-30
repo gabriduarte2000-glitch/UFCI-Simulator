@@ -1,24 +1,12 @@
 // Visão matemática: as equações do circuito montado, na ordem em que se deduz o modelo.
 
-import { useEffect, useMemo, useState } from "react";
-import katex from "katex";
-import "katex/dist/katex.min.css";
+import { useEffect, useState } from "react";
 import { analyzeMath, type MathBlock, type MathReport } from "@ufci/engine";
 import { useProject } from "../store";
+import { useUi } from "../ui";
 import { Icon } from "../components/Icon";
-
-function tex(src: string, display: boolean): string {
-  try {
-    return katex.renderToString(src, { displayMode: display, throwOnError: false, strict: "ignore", trust: false, output: "html" });
-  } catch {
-    return src.replace(/[<>&]/g, "");
-  }
-}
-
-function Tex({ src, display = true }: { src: string; display?: boolean }) {
-  const html = useMemo(() => tex(src, display), [src, display]);
-  return <div className={display ? "math-tex" : "math-tex-inline"} dangerouslySetInnerHTML={{ __html: html }} />;
-}
+import { Tex } from "../components/Tex";
+import SynthPanel from "./SynthPanel";
 
 function Block({ b }: { b: MathBlock }) {
   switch (b.kind) {
@@ -71,7 +59,7 @@ function toLatex(rep: MathReport, name: string): string {
   return out.join("\n");
 }
 
-export default function MathPage() {
+function AnalysePanel() {
   const project = useProject((s) => s.project);
   const [sel, setSel] = useState<{ input?: string; output?: string }>({});
   const [report, setReport] = useState<MathReport | null>(null);
@@ -101,8 +89,14 @@ export default function MathPage() {
   if (empty)
     return (
       <div className="page-empty">
-        <h2>Matemática</h2>
+        <h2>Do circuito para a equação</h2>
         <p>Monte um circuito ou abra uma situação. Aqui você vê as equações, as derivadas, a função de transferência e a resolução algébrica das conexões.</p>
+        <p>
+          Prefere o caminho contrário?{" "}
+          <button className="link-btn" onClick={() => useUi.getState().setMathTab("equacao")}>
+            Digite a equação e gere o circuito.
+          </button>
+        </p>
       </div>
     );
 
@@ -110,9 +104,8 @@ export default function MathPage() {
   const setAll = (v: boolean) => setOpen(Object.fromEntries((report?.sections ?? []).map((s) => [s.id, v])));
 
   return (
-    <div className="page math-page">
+    <>
       <div className="page-head">
-        <h1>Matemática</h1>
         <span className="muted">Equações do circuito montado, na ordem em que o modelo é deduzido.</span>
       </div>
 
@@ -200,6 +193,30 @@ export default function MathPage() {
           </p>
         </>
       )}
+    </>
+  );
+}
+
+export default function MathPage() {
+  const tab = useUi((s) => s.mathTab);
+  const setTab = useUi((s) => s.setMathTab);
+  return (
+    <div className="page math-page">
+      <div className="page-head">
+        <h1>Matemática</h1>
+      </div>
+      <div className="seg" role="tablist" aria-label="Sentido da conversão">
+        <button role="tab" aria-selected={tab === "analise"} className={tab === "analise" ? "on" : ""} onClick={() => setTab("analise")}>
+          Circuito para equação
+        </button>
+        <button role="tab" aria-selected={tab === "equacao"} className={tab === "equacao" ? "on" : ""} onClick={() => setTab("equacao")}>
+          Equação para circuito
+        </button>
+      </div>
+      {tab === "analise" && <AnalysePanel />}
+      <div hidden={tab !== "equacao"} className="synth-wrap">
+        <SynthPanel />
+      </div>
     </div>
   );
 }

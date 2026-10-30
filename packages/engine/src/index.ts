@@ -12,3 +12,5 @@ export { SolverError } from "./solvers";
 export * from "./situations";
 export * from "./math";
 export { eigvals, polyRoots, polyFromRoots } from "./eig";
+export * from "./eqparse";
+export * from "./synth";

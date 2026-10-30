@@ -19,6 +19,7 @@ export function useCompact(): boolean {
 export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores" | "math";
 /** Como os sinais escolhidos se distribuem nos gráficos. */
 export type ChartMode = "unit" | "each" | "all";
+export type MathTab = "analise" | "equacao";
 export type RightTab = "props" | "sim";
 
 interface Ui {
@@ -31,6 +32,8 @@ interface Ui {
   tool: "select" | "pan";
   chartSignal: number[];
   chartMode: ChartMode;
+  mathTab: MathTab;
+  setMathTab(t: MathTab): void;
   setPage(p: Page): void;
   setLeftOpen(v: boolean): void;
   setRightOpen(v: boolean): void;
@@ -52,6 +55,8 @@ export const useUi = create<Ui>((set) => ({
   tool: "select",
   chartSignal: [],
   chartMode: "unit",
+  mathTab: "analise",
+  setMathTab: (mathTab) => set({ mathTab }),
   setPage: (page) => set({ page }),
   setLeftOpen: (leftOpen) => set({ leftOpen }),
   setRightOpen: (rightOpen) => set({ rightOpen }),
