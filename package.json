@@ -1,0 +1,12 @@
+{
+  "name": "ufci-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm --filter @ufci/web dev",
+    "build": "pnpm --filter @ufci/web build",
+    "test": "pnpm --filter @ufci/engine test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
