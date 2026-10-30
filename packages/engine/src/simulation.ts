@@ -40,6 +40,11 @@ export class Simulation {
   private integ!: Integrator;
   private bps: number[] = [];
   private bpIdx = 0;
+  // Eventos discretos (lógica digital, histerese, chaves).
+  private lastSign = new Uint8Array(0);
+  private tmpSign = new Uint8Array(0);
+  private xPrev = new Float64Array(0);
+  private bis: Integrator | null = null;
 
   private opts: SimOptions;
 
@@ -87,8 +92,102 @@ export class Simulation {
       hmax: this.model.suggestedMaxStep(sc.t0, sc.tf),
     });
     this.refreshBreakpoints();
-    this.record(this.t);
+    const ng = this.model.nGuards;
+    this.lastSign = new Uint8Array(ng);
+    this.tmpSign = new Uint8Array(ng);
+    this.xPrev = new Float64Array(this.model.nx);
+    this.bis = ng > 0 ? new Integrator(this.model.f, this.model.nx, { ...this.integ.cfg }) : null;
     this.status = "idle";
+    if (ng > 0) {
+      try {
+        this.model.guardSigns(this.t, this.x, this.lastSign);
+        this.settle(this.t, true);
+      } catch (e) {
+        if (e instanceof SolverError) {
+          this.status = "error";
+          this.diagnostics.push(this.solverDiagnostic(e));
+        } else throw e;
+      }
+    }
+    this.record(this.t);
+  }
+
+  private signsDiffer(): boolean {
+    const a = this.lastSign,
+      b = this.tmpSign;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return true;
+    return false;
+  }
+
+  /** Aplica os eventos pendentes em (t, x) até estabilizar (cascata em tempo zero, como num contador assíncrono). */
+  private settle(t: number, init: boolean) {
+    const n = this.model.nGuards;
+    if (!n) return;
+    let first = init;
+    for (let it = 0; it < 500; it++) {
+      this.model.guardSigns(t, this.x, this.tmpSign);
+      if (!first && !this.signsDiffer()) return;
+      // Primeiro todos juntos (flip-flops no mesmo clock amostram os valores de antes da borda).
+      // Se não estabilizar, um por vez: quebra a simetria de um latch feito com duas portas.
+      const seq = it >= 12;
+      this.model.fireEvents(t, this.x, this.lastSign, this.tmpSign, first, seq);
+      if (!seq) this.lastSign.set(this.tmpSign);
+      first = false;
+    }
+    throw new SolverError("event-loop", t, "Laço de eventos em tempo zero.");
+  }
+
+  /** Integra uma cópia de xFrom de tFrom até tTo com o integrador auxiliar. */
+  private integrateCopy(xFrom: Float64Array, tFrom: number, tTo: number, out: Float64Array) {
+    out.set(xFrom);
+    const bis = this.bis!;
+    bis.invalidate();
+    let t = tFrom;
+    let guard = 0;
+    while (t < tTo - 1e-14 * Math.max(1, Math.abs(tTo)) && guard++ < 100000) {
+      const r = bis.step(t, out, tTo, false);
+      t = r.tNew;
+    }
+  }
+
+  /**
+   * Procura o instante do primeiro evento em (tLo, tHi]. Em entrada, this.x está em tHi e xPrev em tLo.
+   * Em saída, this.x está no instante do evento (já do lado depois do cruzamento) e o instante é devolvido.
+   */
+  private locateEvent(tLo: number, tHi: number, hiIsBp: boolean): number {
+    const nx = this.model.nx;
+    const sc = this.project.simulation;
+    const tol = Math.max(1e-13 * Math.max(1, Math.abs(tHi)), 1e-11 * (sc.tf - sc.t0));
+    let lo = tLo;
+    let hi = tHi;
+    const xLo = Float64Array.from(this.xPrev);
+    const xHi = Float64Array.from(this.x);
+    const xm = new Float64Array(nx);
+    const tmp = this.tmpSign;
+    const keep = Uint8Array.from(tmp);
+    // Salto puro num ponto de quebra (borda de um clock): o evento é exatamente nele.
+    if (hiIsBp) {
+      this.model.guardSigns(leftLimit(hi), xHi, tmp);
+      if (!this.signsDiffer()) {
+        tmp.set(keep);
+        return hi;
+      }
+    }
+    for (let it = 0; it < 60 && hi - lo > tol; it++) {
+      const mid = 0.5 * (lo + hi);
+      this.integrateCopy(xLo, lo, mid, xm);
+      this.model.guardSigns(mid, xm, tmp);
+      if (this.signsDiffer()) {
+        hi = mid;
+        xHi.set(xm);
+      } else {
+        lo = mid;
+        xLo.set(xm);
+      }
+    }
+    tmp.set(keep);
+    this.x.set(xHi);
+    return hi;
   }
 
   private refreshBreakpoints() {
@@ -126,8 +225,27 @@ export class Simulation {
         const nextBp = this.bpIdx < this.bps.length ? this.bps[this.bpIdx] : Infinity;
         const tLimit = Math.min(tf, nextBp);
         const endsAtBp = nextBp <= tf && tLimit === nextBp;
+        const hasEv = this.model.nGuards > 0;
+        if (hasEv) this.xPrev.set(this.x);
+        const tPrev = this.t;
         const res = this.integ.step(this.t, this.x, tLimit, endsAtBp);
         this.t = res.tNew;
+        if (hasEv) {
+          const atBp = endsAtBp && this.t >= nextBp;
+          if (atBp) this.t = nextBp;
+          this.model.guardSigns(this.t, this.x, this.tmpSign);
+          if (this.signsDiffer()) {
+            const te = this.locateEvent(tPrev, this.t, atBp);
+            this.t = te;
+            const onBp = atBp && te >= nextBp;
+            this.record(this.t, onBp);
+            this.settle(this.t, false);
+            this.integ.invalidate();
+            if (onBp) this.bpIdx++;
+            this.record(this.t);
+            continue;
+          }
+        }
         if (endsAtBp && this.t >= nextBp) {
           this.t = nextBp;
           this.record(this.t, true);
@@ -156,6 +274,8 @@ export class Simulation {
       "min-step": `O método precisou de passos pequenos demais ${when}. O sistema pode ser instável ou rígido (dinâmicas muito rápidas e muito lentas juntas). Tente reduzir ganhos, aumentar a tolerância ou revisar os parâmetros.`,
       "non-finite": `O cálculo gerou um valor inválido (NaN ou infinito) ${when}. Costuma indicar instabilidade, divisão por zero ou parâmetro fora de faixa.`,
       "max-steps": `A simulação passou de ${MAX_STEPS.toLocaleString("pt-BR")} passos ${when}. Aumente o passo ou reduza o tempo final.`,
+      "no-converge": `O circuito com diodos, transistores ou amp-ops não convergiu ${when}. Confira polarização, resistores de limitação e valores muito extremos.`,
+      "event-loop": `Há um laço lógico que oscila sem atraso ${when} (por exemplo, um anel de inversores). Use um flip-flop, um latch ou um contador para quebrar o laço.`,
     };
     return { severity: "error", code: `solver-${e.code}`, message: text[e.code] };
   }
@@ -177,6 +297,15 @@ export class Simulation {
     if (!r.appliedNow) return { ok: true, pending: true };
     this.integ.invalidate();
     this.refreshBreakpoints();
+    if (this.model.nGuards > 0 && this.status !== "error") {
+      try {
+        this.settle(this.t, false);
+      } catch (e) {
+        if (!(e instanceof SolverError)) throw e;
+        this.status = "error";
+        this.diagnostics.push(this.solverDiagnostic(e));
+      }
+    }
     if (this.status !== "error") this.record(this.t);
     return { ok: true };
   }

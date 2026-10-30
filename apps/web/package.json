@@ -12,6 +12,7 @@
   "dependencies": {
     "@ufci/engine": "workspace:*",
     "@xyflow/react": "^12.8.0",
+    "katex": "^0.19.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "uplot": "^1.6.32",

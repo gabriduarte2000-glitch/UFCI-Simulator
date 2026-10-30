@@ -4,9 +4,9 @@ Simulador de sistemas de controle e sistemas físicos para estudantes de engenha
 
 ## Estado atual
 
-Fases 0 a 5 do plano (Documento Mestre): controle, processos industriais e empresariais, e os domínios físicos mecânico, elétrico e eletromecânico:
+Fases 0 a 6 do plano (Documento Mestre): controle, processos industriais e empresariais, domínios físicos, eletrônica analógica e digital, e a visão matemática:
 
-- **Páginas separadas**: Montagem (quadro com o máximo de espaço), Dashboard, Gráficos, Tabelas e Indicadores. A biblioteca e o painel da direita (Propriedades e Simulação) recolhem e expandem.
+- **Páginas separadas**: Montagem (quadro com o máximo de espaço), Dashboard, Gráficos, Tabelas, Indicadores e Matemática. A biblioteca e o painel da direita (Propriedades e Simulação) recolhem e expandem.
 - Editor visual de diagrama de blocos com símbolos no estilo dos livros de controle. Atalhos: Ctrl+Z/Y, Ctrl+C/V, Ctrl+D (duplicar), Ctrl+A, Delete; anotações de texto no quadro; duplo clique abre as propriedades.
 - Fontes, operadores (somador, ganho, produto, raiz, módulo, integrador, derivador filtrado), controle (função de transferência, espaço de estados, PID com anti-windup, atraso de 1ª ordem, tempo morto), não linearidades (saturação, zona morta, integrador limitado) e Scope.
 - **Processos industriais**: tanque (nível), válvula, bomba, resistência, tanque aquecido (temperatura) e caldeira (nível, temperatura e vapor).
@@ -19,12 +19,16 @@ Fases 0 a 5 do plano (Documento Mestre): controle, processos industriais e empre
 - Situações físicas: massa-mola-amortecedor, suspensão de um quarto de carro, eixo flexível com dois volantes, circuito RLC, filtros RC, motor CC com carga, servo de posição e motor com redutor.
 - **Animação ao vivo**: os tanques sobem e descem conforme o nível, a água muda de azul para vermelho com a temperatura (tanque aquecido, caldeira e, no tanque simples, pela entrada "Temperatura da água", só visual), bolhas e vapor perto da fervura, bomba girando, válvula enchendo conforme a abertura, resistência brilhando, eixos girando e fios com a água correndo nas vazões em L/min. Os tanques crescem de leve com a altura e a área.
 - **Celular e tablet**: em telas estreitas a navegação vai para a barra de baixo, a biblioteca e os painéis viram folhas que sobem da parte de baixo, há botões flutuantes (adicionar componente e simulação) e uma barra de ações ao tocar num componente (propriedades, duplicar, excluir). Um dedo move a vista, dois dedos dão zoom, e as portas têm área de toque maior. Funciona deitado e pode ser instalado na tela inicial (PWA).
+- **Semicondutores e amplificadores**: diodo, Zener, LED, transistor BJT (NPN e PNP, Ebers-Moll), MOSFET (canal N e P, nível 1) e amplificador operacional com saturação suave. As junções são resolvidas por Newton-Raphson dentro da análise nodal.
+- **Digital e CIs**: portas (AND, OR, NOT, NAND, NOR, XOR, XNOR), flip-flops D, JK e T, latches SR e D, contador binário, registrador de deslocamento, multiplexador, decodificador, somador, comparador com histerese, ADC, DAC, clock, chave digital, LED e display de 7 segmentos. O CI 555 e a chave analógica ficam no grupo de semicondutores. As chaves e LEDs reagem ao vivo no quadro.
+- **Situações de eletrônica e digital**: retificador, regulador Zener, amplificador emissor comum, LED com MOSFET, amplificador inversor, 555 astável, contador com display, somador completo, latch SR, contador com DAC e termostato liga-desliga com histerese.
+- **Visão Matemática** (aba Matemática): a partir do circuito montado, mostra as leis de cada elemento, a lei dos nós por nó, a matriz de admitâncias simbólica, as equações de estado com as matrizes A, B, C e D, os autovalores e polos, a função de transferência e o resumo do comportamento (frequência natural, amortecimento, tempo de acomodação). A redução final é numérica e linearizada no ponto de operação.
 - Unidade de tempo selecionável (s, min, h, dias) para os rótulos; os blocos de processo usam segundos nas equações.
 - Motor numérico próprio: Euler, RK4 e RK45 (Dormand-Prince adaptativo), com tratamento exato de descontinuidades e detecção de laço algébrico.
 - Edição ao vivo: mudar um parâmetro com a simulação rodando continua do estado atual e marca o instante no gráfico.
 - Gráficos agrupados por unidade, instrumentos, tabelas, indicadores de resposta ao degrau, exportação CSV, salvar e abrir projeto em arquivo JSON.
 
-Limitações conhecidas: o tempo morto usa aproximação de Padé (resposta inversa inicial esperada); ainda não há controlador liga/desliga com histerese; nos domínios físicos toda massa ou capacitor precisa de caminho até a referência (parede ou terra), uma mola ou indutor em série sem massa ou capacitor entre eles não é aceito, e uma fonte de velocidade ou de tensão não pode ficar ligada direto a uma massa ou capacitor (o programa avisa). Os valores das situações são ilustrativos.
+Limitações conhecidas: o tempo morto usa aproximação de Padé (resposta inversa inicial esperada); os componentes digitais não têm atraso de propagação e o amplificador operacional não tem produto ganho-banda nem slew rate; o 555 recebe Vcc como parâmetro e os transistores não têm capacitâncias; nos domínios físicos toda massa ou capacitor precisa de caminho até a referência (parede ou terra), uma mola ou indutor em série sem massa ou capacitor entre eles não é aceito, e uma fonte de velocidade ou de tensão não pode ficar ligada direto a uma massa ou capacitor (o programa avisa). Os valores das situações são ilustrativos.
 
 ## Estrutura
 

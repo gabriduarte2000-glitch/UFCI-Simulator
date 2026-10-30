@@ -16,7 +16,7 @@ export function useCompact(): boolean {
   );
 }
 
-export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores";
+export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores" | "math";
 /** Como os sinais escolhidos se distribuem nos gráficos. */
 export type ChartMode = "unit" | "each" | "all";
 export type RightTab = "props" | "sim";

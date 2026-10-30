@@ -6,7 +6,7 @@ import "./components";
 import { getDef, makeReader, portsOf, type ComponentDef } from "./components/registry";
 import type { CompInfo, PhysCtx, Unit } from "./internal";
 import { buildPhysical } from "./physical";
-import type { Deriv } from "./solvers";
+import { SolverError, type Deriv } from "./solvers";
 import type {
   Diagnostic,
   Domain,
@@ -46,6 +46,28 @@ export interface CompiledModel {
   setParam(compId: string, key: string, value: number | boolean | string): SetParamResult;
   /** Número de estados de cada componente, para depuração e testes. */
   stateCount(compId: string): number;
+  /** Quantidade de guardas de eventos discretos (0 se o projeto não tem lógica digital, chaves ou histerese). */
+  nGuards: number;
+  /** Nível (0/1) de cada guarda em (t, x). */
+  guardSigns(t: number, x: Float64Array, out: Uint8Array): void;
+  /**
+   * Aplica as transições entre prev e next (altera x). init: ajuste do instante inicial.
+   * seq: dispara só o primeiro componente com transição e atualiza prev só para ele (quebra a simetria de latches).
+   */
+  fireEvents(t: number, x: Float64Array, prev: Uint8Array, next: Uint8Array, init: boolean, seq?: boolean): void;
+  /** Valores impostos a sinais de fora (usado pela análise linear): índice do sinal para valor. Vazio na simulação normal. */
+  overrides: Map<number, number>;
+  /** Resumo das unidades de cálculo, na ordem de execução. */
+  unitInfo(): UnitInfo[];
+}
+
+export interface UnitInfo {
+  compIds: string[];
+  off: number;
+  nStates: number;
+  inputIdx: number[];
+  producedIdx: number[];
+  discrete: boolean;
 }
 
 export interface CompileResult {
@@ -371,6 +393,39 @@ export function compile(project: ProjectIR): CompileResult {
         return "ok";
       },
     };
+    if (impl.discrete) {
+      const ng = impl.discrete.nGuards;
+      const gl = new Array<number>(ng).fill(0);
+      const pl = new Array<number>(ng).fill(0);
+      const nl = new Array<number>(ng).fill(0);
+      const uAll = new Array<number>(inPorts.length).fill(0);
+      const gather = (sig: Float64Array) => {
+        for (let i = 0; i < uAll.length; i++) uAll[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : 0;
+      };
+      unit.nGuards = ng;
+      unit.guards = (t, x, sig, g) => {
+        gather(sig);
+        slot.impl.discrete!.guards(t, x, unit.off, uAll, gl);
+        for (let i = 0; i < ng; i++) g[unit.guardOff! + i] = gl[i];
+      };
+      unit.fire = (t, x, sig, prev, next, init) => {
+        let any = init;
+        for (let i = 0; i < ng; i++) {
+          pl[i] = prev[unit.guardOff! + i];
+          nl[i] = next[unit.guardOff! + i];
+          if (pl[i] !== nl[i]) any = true;
+        }
+        if (!any) return;
+        gather(sig);
+        slot.impl.discrete!.fire(t, x, unit.off, uAll, pl, nl, init);
+      };
+      const baseRefresh = unit.refresh!;
+      unit.refresh = (id) => {
+        const r = baseRefresh(id);
+        if (r === "ok" && (slot.impl.discrete?.nGuards ?? 0) !== ng) return "reset";
+        return r;
+      };
+    }
     units.push(unit);
     unitOfComp.set(ci.inst.id, unit);
     if (ci.def.type === "sink.scope" && inputIdx.every((i) => i < 0))
@@ -462,13 +517,36 @@ export function compile(project: ProjectIR): CompileResult {
   }
   const sig = new Float64Array(signals.length);
 
+  // ---- eventos discretos
+  const discUnits = ordered.filter((u) => (u.nGuards ?? 0) > 0);
+  let nGuards = 0;
+  for (const u of discUnits) {
+    u.guardOff = nGuards;
+    nGuards += u.nGuards!;
+  }
+  const gbuf = new Float64Array(nGuards);
+
+  const overrides = new Map<number, number>();
   const evalAll = (t: number, x: Float64Array) => {
-    for (const u of ordered) u.evalOut(t, x, sig);
+    for (const u of ordered) {
+      u.evalOut(t, x, sig);
+      if (overrides.size > 0) for (const s of u.producedIdx) if (overrides.has(s)) sig[s] = overrides.get(s)!;
+    }
   };
   const f: Deriv = (t, x, dx) => {
-    evalAll(t, x);
-    dx.fill(0);
-    for (const u of ordered) if (u.nStates > 0) u.evalDer(t, x, sig, dx);
+    try {
+      evalAll(t, x);
+      dx.fill(0);
+      for (const u of ordered) if (u.nStates > 0) u.evalDer(t, x, sig, dx);
+    } catch (e) {
+      // Estágio de teste do integrador em estado absurdo: o circuito não converge. Devolve NaN
+      // para o integrador rejeitar o passo e tentar um menor.
+      if (e instanceof SolverError && (e.code === "no-converge" || e.code === "non-finite")) {
+        dx.fill(NaN);
+        return;
+      }
+      throw e;
+    }
   };
 
   const model: CompiledModel = {
@@ -501,6 +579,33 @@ export function compile(project: ProjectIR): CompileResult {
       return h;
     },
     stateCount: (id) => unitOfComp.get(id)?.nStates ?? 0,
+    overrides,
+    unitInfo: () =>
+      ordered.map((u) => ({ compIds: u.compIds, off: u.off, nStates: u.nStates, inputIdx: u.inputIdx, producedIdx: u.producedIdx, discrete: (u.nGuards ?? 0) > 0 })),
+    nGuards,
+    guardSigns: (t, x, out) => {
+      if (nGuards === 0) return;
+      evalAll(t, x);
+      for (const u of discUnits) u.guards!(t, x, sig, gbuf);
+      for (let i = 0; i < nGuards; i++) out[i] = gbuf[i] >= 0 ? 1 : 0;
+    },
+    fireEvents: (t, x, prev, next, init, seq) => {
+      if (nGuards === 0) return;
+      evalAll(t, x);
+      if (!seq) {
+        for (const u of discUnits) u.fire!(t, x, sig, prev, next, init);
+        return;
+      }
+      for (const u of discUnits) {
+        const a = u.guardOff!;
+        let changed = false;
+        for (let i = 0; i < u.nGuards!; i++) if (prev[a + i] !== next[a + i]) changed = true;
+        if (!changed) continue;
+        u.fire!(t, x, sig, prev, next, false);
+        for (let i = 0; i < u.nGuards!; i++) prev[a + i] = next[a + i];
+        return;
+      }
+    },
     setParam: (compId, key, value) => {
       const ci = byId.get(compId);
       if (!ci) return { ok: false, message: "Componente não encontrado." };

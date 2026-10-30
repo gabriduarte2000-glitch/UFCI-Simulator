@@ -4,9 +4,10 @@
 import { build, exampleFirstOrder, examplePidLoop } from "./examples";
 import { dcMotorLoad, flexibleShaft, geared, massSpringDamper, positionServo, quarterCar, rcFilters, rlcSeries } from "./situations-phys";
 import { rainTreatment } from "./situations-tcc";
+import { commonEmitter, counterDisplay, dacStaircase, fullAdderGates, halfWaveRectifier, invertingAmp, mosfetSwitch, norLatch, thermostat, timer555Astable, zenerRegulator } from "./situations-semi";
 import type { ProjectIR } from "./types";
 
-export type SituationGroup = "basic" | "industry" | "business" | "mech" | "elec" | "electromech";
+export type SituationGroup = "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
 
 export interface Situation {
   id: string;
@@ -255,6 +256,17 @@ export const SITUATIONS: Situation[] = [
   { id: "dc-motor", group: "electromech", title: "Motor CC com carga", description: "Degrau de 12 V em um motor com carga inercial. Você aplica torque de carga com o controle deslizante.", explore: "Aplique torque de carga e veja a velocidade cair e a corrente subir.", make: dcMotorLoad },
   { id: "servo", group: "electromech", title: "Servo de posição com PID", description: "O PID ajusta a tensão do motor para levar o eixo a 1 rad.", explore: "Aplique torque de carga e mude Ki para ver o erro ser eliminado.", make: positionServo },
   { id: "geared-motor", group: "electromech", title: "Motor com redutor de engrenagens", description: "Redutor 10:1 entre o motor e uma carga pesada com atrito.", explore: "Mude a relação N e compare a velocidade do motor com a da carga.", make: geared },
+  { id: "rectifier", group: "semi", title: "Retificador de meia onda com filtro", description: "Fonte senoidal de 10 V e 50 Hz, diodo e capacitor de filtro alimentando uma carga.", explore: "Reduza o capacitor e veja a ondulação (ripple) aumentar. Compare a corrente do diodo, que só conduz em pulsos.", make: halfWaveRectifier },
+  { id: "zener", group: "semi", title: "Regulador com diodo Zener", description: "Resistor em série e Zener de 5,1 V seguram a tensão na carga enquanto a entrada varia.", explore: "Varie a tensão de entrada de 7 a 30 V e veja a saída ficar quase parada em 5 V. Abaixo de uns 6 V o Zener deixa de regular.", make: zenerRegulator },
+  { id: "ce-amp", group: "semi", title: "Amplificador emissor comum (BJT)", description: "Transistor NPN polarizado por divisor de tensão, com capacitores de acoplamento e de desvio.", explore: "Tire o capacitor Ce (coloque uma capacitância muito pequena) e veja o ganho cair. Aumente o sinal para ver a saída distorcer.", make: commonEmitter },
+  { id: "mosfet-led", group: "semi", title: "MOSFET como chave com LED", description: "Um pulso na porta liga e desliga o MOSFET de canal N, que acende o LED.", explore: "Mude o ciclo de trabalho do pulso e veja o tempo aceso mudar. Baixe o pulso para menos de 2 V (Vth) e o LED não acende.", make: mosfetSwitch },
+  { id: "inv-amp", group: "semi", title: "Amplificador inversor com amp-op", description: "Ganho de −4,7 com Rf/Rin, alimentação de ±10 V e entrada senoidal.", explore: "Aumente a amplitude do sinal para 3 V e veja a saída ser cortada em ±10 V.", make: invertingAmp },
+  { id: "timer555", group: "digital", title: "555 astável (pisca-pisca)", description: "O CI 555 carrega e descarrega o capacitor entre 1/3 e 2/3 de Vcc e gera uma onda quadrada.", explore: "O período é 0,693·(R1 + 2·R2)·C. Mude R2 e confira o novo período no gráfico.", make: timer555Astable },
+  { id: "counter-disp", group: "digital", title: "Contador binário com display", description: "Clock de 2 Hz, contador de 4 bits, quatro LEDs e display de 7 segmentos.", explore: "Ligue a chave de zerar para travar a contagem em 0. Mude o módulo do contador para 10.", make: counterDisplay },
+  { id: "full-adder", group: "digital", title: "Somador completo com portas", description: "Duas portas XOR, duas AND e uma OR somam A, B e o vai-um de entrada.", explore: "Mude as três chaves e confira a tabela verdade: 1 + 1 + 1 dá soma 1 e vai-um 1.", make: fullAdderGates },
+  { id: "sr-latch", group: "digital", title: "Latch SR com portas NOR", description: "Duas portas NOR com realimentação cruzada guardam 1 bit de memória.", explore: "O pulso em S põe Q em 1. Ele continua em 1 quando S volta a 0. O pulso em R zera.", make: norLatch },
+  { id: "dac-stair", group: "digital", title: "Contador com conversor D/A", description: "O contador de 4 bits alimenta um DAC e gera uma rampa em escada de 0 a 5 V.", explore: "Aumente os bits do contador e do DAC para 6 e veja a escada ficar mais fina.", make: dacStaircase },
+  { id: "thermostat", group: "digital", title: "Termostato liga-desliga com histerese", description: "Um comparador com histerese liga e desliga a resistência de um tanque d'água entre 58 e 62 °C.", explore: "Aumente a histerese e veja a temperatura oscilar numa faixa maior, com menos chaveamentos.", make: thermostat },
   { id: "first-order", group: "basic", title: "Resposta de 1ª ordem", description: "Degrau aplicado a G(s) = 1/(s+1).", explore: "Troque a constante de tempo e veja o tempo de subida mudar.", make: exampleFirstOrder },
   { id: "pid-loop", group: "basic", title: "Malha fechada com PID", description: "PID controlando uma planta de 2ª ordem.", explore: "Mude Kp, Ki e Kd com a simulação rodando.", make: examplePidLoop },
   { id: "rain-treatment", group: "industry", title: "Tratamento de água pluvial (TCC)", description: "Reservatório, bomba, pré-tratamento, decantador, caixa de água decantada, cloração com filtro e saída, com as válvulas 1, 3, 4 e 5.", explore: "Na página Gráficos, mexa nos controles deslizantes das bombas e das válvulas e veja os níveis de cada tanque.", make: rainTreatment },
@@ -271,6 +283,8 @@ export const SITUATION_GROUPS: { id: SituationGroup; label: string }[] = [
   { id: "mech", label: "Mecânica" },
   { id: "elec", label: "Circuitos elétricos" },
   { id: "electromech", label: "Eletromecânica" },
+  { id: "semi", label: "Semicondutores e amplificadores" },
+  { id: "digital", label: "Digital e CIs" },
   { id: "industry", label: "Indústria" },
   { id: "business", label: "Empresarial" },
   { id: "basic", label: "Básicos" },

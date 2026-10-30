@@ -12,7 +12,7 @@ import type { SolverId } from "./types";
 export type Deriv = (t: number, x: Float64Array, dx: Float64Array) => void;
 
 export class SolverError extends Error {
-  code: "min-step" | "non-finite" | "max-steps";
+  code: "min-step" | "non-finite" | "max-steps" | "no-converge" | "event-loop";
   t: number;
   constructor(code: SolverError["code"], t: number, message: string) {
     super(message);
@@ -136,7 +136,7 @@ export class Integrator {
       d2 += ((f1[i] - f0[i]) / sc) ** 2;
     }
     d2 = Math.sqrt(d2 / n) / h0;
-    const h1 = Math.max(d1, d2) <= 1e-15 ? Math.max(1e-6, h0 * 1e-3) : (0.01 / Math.max(d1, d2)) ** (1 / 5);
+    const h1 = !Number.isFinite(d2) || !Number.isFinite(h0) ? 1e-3 * Math.max(1e-6, Number.isFinite(h0) ? h0 : 1e-6) : Math.max(d1, d2) <= 1e-15 ? Math.max(1e-6, h0 * 1e-3) : (0.01 / Math.max(d1, d2)) ** (1 / 5);
     return Math.min(100 * h0, h1, hmax, Math.max(tEnd - t, 0));
   }
 

@@ -24,6 +24,16 @@ export interface Unit {
   breakpoints?(t0: number, tf: number): number[];
   minTimescale?(): number;
   /**
+   * Eventos discretos (lógica digital, comparador com histerese, chaves). Os estados discretos ficam
+   * no vetor x com derivada zero; só mudam em `fire`. Cada guarda g vale "nível alto" quando g >= 0.
+   */
+  nGuards?: number;
+  /** Início das guardas desta unidade no vetor global. Definido pelo compilador. */
+  guardOff?: number;
+  guards?(t: number, x: Float64Array, sig: Float64Array, g: Float64Array): void;
+  /** Aplica as transições. prev e next são os níveis (0/1) antes e depois, no vetor global. init: ajuste do instante inicial. */
+  fire?(t: number, x: Float64Array, sig: Float64Array, prev: Uint8Array, next: Uint8Array, init: boolean): void;
+  /**
    * Relê os parâmetros depois de uma mudança ao vivo.
    * Retorna "reset" se a mudança altera o número de estados ou a estrutura.
    */

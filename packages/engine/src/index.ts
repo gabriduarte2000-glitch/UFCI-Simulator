@@ -10,3 +10,5 @@ export { allDefs, getDef, CATEGORIES, newComponent, portsOf, defaultParams } fro
 export type { ComponentDef, CategoryId } from "./components/registry";
 export { SolverError } from "./solvers";
 export * from "./situations";
+export * from "./math";
+export { eigvals, polyRoots, polyFromRoots } from "./eig";

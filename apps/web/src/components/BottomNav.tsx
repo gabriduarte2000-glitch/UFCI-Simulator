@@ -7,6 +7,7 @@ const PAGES: { id: Page; label: string; icon: string }[] = [
   { id: "graficos", label: "Gráficos", icon: "chartLine" },
   { id: "tabelas", label: "Tabelas", icon: "table" },
   { id: "indicadores", label: "Indicadores", icon: "gauge" },
+  { id: "math", label: "Matemática", icon: "sigma" },
 ];
 
 /** Navegação entre páginas na parte de baixo da tela (só aparece em telas estreitas). */

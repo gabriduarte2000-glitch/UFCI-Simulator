@@ -11,6 +11,18 @@ export interface ParamReader {
   rev(): number;
 }
 
+/**
+ * Parte discreta de um bloco: o estado muda só em eventos (cruzamento de limiar de uma guarda).
+ * Os estados discretos ficam no vetor x do bloco, com derivada zero.
+ */
+export interface BlockDiscrete {
+  nGuards: number;
+  /** g[i] >= 0 significa nível alto. u são as entradas (0 quando sem fio). */
+  guards(t: number, x: Float64Array, o: number, u: number[], g: number[]): void;
+  /** prev e next têm 0/1 por guarda. Altera x[o + i] no lugar. init: instante inicial, todas as saídas são recalculadas. */
+  fire(t: number, x: Float64Array, o: number, u: number[], prev: number[], next: number[], init: boolean): void;
+}
+
 /** Implementação numérica de um bloco de sinal (causal). */
 export interface BlockImpl {
   nStates: number;
@@ -25,9 +37,11 @@ export interface BlockImpl {
   breakpoints?(t0: number, tf: number): number[];
   /** Menor escala de tempo característica, para limitar o passo. */
   minTimescale?(): number;
+  /** Eventos discretos. A saída deve depender só do estado (feedthrough falso). */
+  discrete?: BlockDiscrete;
 }
 
-export type CategoryId = "sources" | "math" | "control" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech";
+export type CategoryId = "sources" | "math" | "control" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi";
 
 export interface ComponentDef {
   type: string;
@@ -62,6 +76,9 @@ export const CATEGORIES: { id: CategoryId; label: string; available: boolean }[]
   { id: "rot", label: "Mecânico, rotação", available: true },
   { id: "elec", label: "Elétrico", available: true },
   { id: "electromech", label: "Eletromecânico", available: true },
+  { id: "semi", label: "Semicondutores e amplificadores", available: true },
+  { id: "dgate", label: "Digital: portas e lógica", available: true },
+  { id: "dseq", label: "Digital: sequenciais e CIs", available: true },
 ];
 
 const registry = new Map<string, ComponentDef>();

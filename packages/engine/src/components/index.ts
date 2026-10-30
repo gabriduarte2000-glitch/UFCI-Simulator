@@ -2,3 +2,5 @@
 import "./blocks";
 import "./extra";
 import "./phys";
+import "./digital";
+import "./semi";

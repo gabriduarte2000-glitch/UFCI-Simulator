@@ -3,6 +3,7 @@
 
 import { useId } from "react";
 import type { ParamValue } from "@ufci/engine";
+import { semiArt, semiSize } from "./SymbolsSemi";
 
 type Params = Record<string, ParamValue>;
 const num = (p: Params, k: string, d = 0) => {
@@ -30,6 +31,15 @@ export type LiveVals = Record<string, number>;
 
 const SUP = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
 const sup = (n: number) => [...String(n)].map((c) => SUP[+c] ?? c).join("");
+/** Valor com prefixo do SI e vírgula decimal: 2,2 µF, 4,7 kΩ. */
+export function si(v: number, unit: string): string {
+  if (!Number.isFinite(v)) return `? ${unit}`;
+  if (v === 0) return `0 ${unit}`;
+  const P: [number, string][] = [[1e9, "G"], [1e6, "M"], [1e3, "k"], [1, ""], [1e-3, "m"], [1e-6, "µ"], [1e-9, "n"], [1e-12, "p"]];
+  const a = Math.abs(v);
+  const [f, pre] = P.find(([k]) => a >= k * 0.9995) ?? P[P.length - 1];
+  return `${String(+(v / f).toPrecision(3)).replace(".", ",")} ${pre}${unit}`;
+}
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : String(+v.toPrecision(3)));
 
 export function polyText(text: string): string {
@@ -136,7 +146,7 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
       return { w: 184, h: Math.max(56, 26 + lines.length * 16) };
     }
     default:
-      return { w: 92, h: 56 };
+      return semiSize(symbol, p) ?? { w: 92, h: 56 };
   }
 }
 
@@ -710,7 +720,7 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
       return (
         <>
           <path d={d} fill="none" stroke={ELEC} strokeWidth={1.8} strokeLinejoin="round" />
-          {txt(cx, cy - 17, `${fmt(num(params, "R", 1))} Ω`, 11)}
+          {txt(cx, cy - 17, si(num(params, "R", 1), "Ω"), 11)}
         </>
       );
     }
@@ -719,7 +729,7 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
         <>
           <path d={`M0 ${cy}H${cx - 5}M${cx + 5} ${cy}H${w}`} stroke={ELEC} strokeWidth={1.8} />
           <path d={`M${cx - 5} ${cy - 16}V${cy + 16}M${cx + 5} ${cy - 16}V${cy + 16}`} stroke={stroke} strokeWidth={2.4} />
-          {txt(cx, cy - 22, `${fmt(num(params, "C", 1))} F`, 11)}
+          {txt(cx, cy - 22, si(num(params, "C", 1), "F"), 11)}
         </>
       );
     case "inductor": {
@@ -733,7 +743,7 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
       return (
         <>
           <path d={d} fill="none" stroke={ELEC} strokeWidth={1.8} />
-          {txt(cx, cy + 18, `${fmt(num(params, "L", 1))} H`, 11)}
+          {txt(cx, cy + 18, si(num(params, "L", 1), "H"), 11)}
         </>
       );
     }
@@ -782,12 +792,15 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
           {txt(10, h - 25, "−", 12, "middle", 700)}
         </>
       );
-    default:
+    default: {
+      const art = semiArt(symbol, params, w, h, live);
+      if (art) return <>{art}</>;
       return (
         <>
           {box}
           {txt(cx, cy, "?", 16)}
         </>
       );
+    }
   }
 }

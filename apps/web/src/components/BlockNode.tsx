@@ -1,7 +1,8 @@
 import { memo, useEffect, useMemo } from "react";
 import { Handle, Position, useUpdateNodeInternals, type NodeProps, type Node } from "@xyflow/react";
 import { getDef, portsOf, type ParamValue } from "@ufci/engine";
-import { useHasInputWire, useLiveInput, useLiveOut } from "../liveOut";
+import { useHasInputWire, useLiveIns, useLiveInput, useLiveOut } from "../liveOut";
+import { useProject } from "../store";
 import { nodeSize, SymbolArt } from "./Symbols";
 
 export interface BlockData extends Record<string, unknown> {
@@ -26,7 +27,10 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   const update = useUpdateNodeInternals();
   const ports = useMemo(() => (def ? portsOf(def, data.params) : []), [def, data.params]);
   const sig = ports.map((p) => p.name).join(",");
-  const liveOut = useLiveOut(id, def?.symbol ?? "");
+  const liveOut0 = useLiveOut(id, def?.symbol ?? "");
+  const liveIns = useLiveIns(id, def?.symbol ?? "");
+  const liveOut = useMemo(() => ({ ...liveOut0, ...liveIns }), [liveOut0, liveIns]);
+  const setParam = useProject((s) => s.setParam);
   const twWire = useHasInputWire(id, "Tw");
   const twVal = useLiveInput(id, "Tw");
   const size = def ? nodeSize(def.symbol, data.params) : { w: 0, h: 0 };
@@ -83,12 +87,24 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
               </span>
             );
           })}
-      {!hasShort && ins.length > 1 &&
+      {!hasShort && !def.symbol.startsWith("g-") && ins.length > 1 &&
         ins.map((p, i) => (
           <span key={p.name} className="port-label" style={{ top: place(p, "left") - 7, left: def.symbol === "sum" ? -22 : 5 }}>
             {def.symbol === "sum" ? (signs[i] === "-" ? "−" : "+") : i + 1}
           </span>
         ))}
+      {def.symbol === "dswitch" && (
+        <button
+          type="button"
+          className="dsw-toggle nodrag nopan"
+          aria-label="Alternar chave"
+          title="Alternar a chave (0 ou 1)"
+          onClick={(e) => {
+            e.stopPropagation();
+            setParam(id, "on", data.params.on?.value !== true);
+          }}
+        />
+      )}
       {!isNote && (
         <div className="node-title" style={{ top: h + (hasBottom ? 11 : 5) }}>
           {data.label}

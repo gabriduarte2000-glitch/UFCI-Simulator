@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { TopBar } from "./components/TopBar";
 import { Library } from "./components/Library";
@@ -9,6 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { GraficosPage } from "./pages/GraficosPage";
 import { TabelasPage } from "./pages/TabelasPage";
 import { IndicadoresPage } from "./pages/IndicadoresPage";
+const MathPage = lazy(() => import("./pages/MathPage"));
 import { BottomNav } from "./components/BottomNav";
 import { useCompact, useUi } from "./ui";
 import "./live";
@@ -70,6 +72,11 @@ export function App() {
         {page === "graficos" && <GraficosPage />}
         {page === "tabelas" && <TabelasPage />}
         {page === "indicadores" && <IndicadoresPage />}
+        {page === "math" && (
+          <Suspense fallback={<div className="page-empty"><p>Carregando…</p></div>}>
+            <MathPage />
+          </Suspense>
+        )}
         <StatusBar />
         <BottomNav />
       </div>

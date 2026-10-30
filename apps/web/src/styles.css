@@ -1689,7 +1689,7 @@ th {
   .bottom-nav {
     display: grid;
     grid-row: 3;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     background: var(--panel);
     border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
@@ -1928,5 +1928,213 @@ th {
   .toast,
   .sel-bar {
     bottom: 12px !important;
+  }
+}
+
+/* Chave digital: o símbolo todo é o botão, com área de toque confortável */
+.dsw-toggle {
+  position: absolute;
+  inset: -6px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.dsw-toggle:focus-visible {
+  outline: 2px solid #2a6bd6;
+}
+@media (pointer: coarse) {
+  .dsw-toggle {
+    inset: -10px;
+  }
+}
+
+
+/* ------- página Matemática */
+.math-page {
+  gap: 10px;
+}
+.math-page > * {
+  flex: none;
+}
+.math-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 12px 14px;
+}
+.math-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.math-controls select {
+  max-width: 300px;
+  min-width: 160px;
+}
+.math-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.math-toc {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 0;
+  position: sticky;
+  top: -16px;
+  z-index: 3;
+  background: var(--bg);
+  scrollbar-width: thin;
+}
+.math-toc a {
+  flex: none;
+  white-space: nowrap;
+  padding: 5px 11px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12px;
+}
+.math-toc a:hover {
+  color: var(--text);
+  border-color: var(--accent-2);
+}
+.math-sec {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  scroll-margin-top: 52px;
+}
+.math-sec > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent-2);
+}
+.math-sec > summary::-webkit-details-marker {
+  display: none;
+}
+.math-sec > summary svg {
+  transition: transform 0.15s;
+  transform: rotate(-90deg);
+  flex: none;
+}
+.math-sec[open] > summary svg {
+  transform: none;
+}
+.math-sec h2 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+}
+.math-body {
+  padding: 0 14px 14px;
+  min-width: 0;
+}
+.math-lead {
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 78ch;
+}
+.math-h3 {
+  margin: 14px 0 4px;
+  font-size: 12.5px;
+  color: var(--accent-2);
+  font-weight: 600;
+}
+.math-note {
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-2);
+  border-radius: 4px;
+  line-height: 1.5;
+  max-width: 78ch;
+}
+.math-eq {
+  margin: 4px 0 10px;
+  min-width: 0;
+}
+.math-eq figcaption {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.math-tex {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border-radius: 8px;
+  font-size: 1.05em;
+}
+.math-tex .katex-display {
+  margin: 0.3em 0;
+  text-align: left;
+}
+.math-tex .katex-display > .katex {
+  text-align: left;
+}
+.math-tex-inline {
+  display: inline-block;
+}
+.math-table table {
+  min-width: 0;
+}
+.math-table td,
+.math-table th {
+  text-align: left;
+  vertical-align: middle;
+}
+.math-busy,
+.math-error {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.math-error {
+  border-left: 3px solid var(--err);
+}
+.math-foot {
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 80ch;
+}
+@media (max-width: 900px) {
+  .math-page {
+    padding: 12px 12px 16px;
+  }
+  .math-controls select {
+    max-width: 100%;
+    width: 100%;
+  }
+  .math-controls label {
+    flex: 1 1 100%;
+  }
+  .math-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+  .math-toc {
+    top: -12px;
+  }
+  .math-tex {
+    font-size: 0.95em;
+  }
+  .bottom-nav button {
+    font-size: 10px;
   }
 }
