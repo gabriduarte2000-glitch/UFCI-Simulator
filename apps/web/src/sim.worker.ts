@@ -92,7 +92,8 @@ function tick() {
       sim.advanceTo(sim.t + (sc.tf - sc.t0) / 200);
     } while (sim.status === "running" && performance.now() < deadline);
   } else {
-    sim.advanceTo(sim.t + base * speed * dt);
+    // speed negativo = tempo real: |speed| segundos simulados por segundo de relógio
+    sim.advanceTo(sim.t + (speed < 0 ? -speed : base * speed) * dt);
   }
   if (sim.status === "finished" || sim.status === "error") playing = false;
   flush(sim.status === "error");

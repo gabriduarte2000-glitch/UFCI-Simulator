@@ -137,3 +137,23 @@ describe("situações com CIs", () => {
     }
   });
 });
+
+import { trafficLadder } from "../src/situations-ics";
+describe("TON e semáforo ladder", () => {
+  it("fases respeitam os tempos programados e ciclo de 23 s", () => {
+    const sim = run(trafficLadder());
+    const g = (id: string, t: number) => R(at(sim, id, t));
+    expect(g("n1.y", 5)).toBe(1);
+    expect(g("ay.y", 11)).toBe(1);
+    expect(g("t2.q", 14)).toBe(1);
+    expect(g("ap.y", 16)).toBe(1);
+    expect(g("ap.y", 22)).toBe(1);
+    expect(g("n1.y", 28)).toBe(1); // novo ciclo: verde de novo
+    expect(g("ay.y", 36)).toBe(1);
+    for (let t = 0.5; t < 58; t += 0.5) {
+      const vg = g("n1.y", t), vy = g("ay.y", t), vr = g("t2.q", t), pg = g("ap.y", t);
+      expect(vg + vy + vr, `t=${t}`).toBe(1);
+      expect(Number(!!pg && !vr), `ped sem veículo vermelho t=${t}`).toBe(0);
+    }
+  });
+});

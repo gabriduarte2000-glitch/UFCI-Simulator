@@ -8,6 +8,10 @@ import { LiveInputs } from "./LiveInputs";
 import { useTimeUnit, TIME_UNITS } from "../timeunit";
 
 const SPEEDS: { v: number; label: string }[] = [
+  { v: -1, label: "Tempo real (1 s = 1 s)" },
+  { v: -0.5, label: "Metade do tempo real" },
+  { v: 0.05, label: "0,05×" },
+  { v: 0.1, label: "0,1×" },
   { v: 0.25, label: "0,25×" },
   { v: 0.5, label: "0,5×" },
   { v: 1, label: "1×" },

@@ -630,3 +630,56 @@ registerComponent({
 });
 
 export type { ParamDef };
+
+// ------------------------------------------------------------------------------------------------ temporizador TON (ladder)
+registerComponent({
+  type: "dig.ton",
+  label: "Temporizador TON (retardo na energização)",
+  category: "dseq",
+  labelPrefix: "T",
+  symbol: "g:TON|retardo",
+  keywords: "ton timer temporizador ladder clp plc retardo energizacao atraso tempo pt et",
+  description: "Temporizador do CLP (ladder). Quando IN fica em 1, conta o tempo PT. Passado PT, Q vai a 1 e fica em 1 enquanto IN for 1. Se IN cair antes, zera. ET mostra o tempo contado.",
+  model: "Q = 1 quando IN ficou em 1 por pelo menos PT;  ET = min(tempo com IN em 1, PT)",
+  hypotheses: [LOGIC, "O instante em que Q sobe é calculado com precisão, não só no fim do passo.", "PT é o tempo em segundos."],
+  ports: [inP("in", "Entrada IN", false, "IN"), outP("q", "Saída Q (tempo vencido)", "Q"), outP("et", "Tempo contado ET", "ET", "s")],
+  params: [{ key: "PT", label: "Tempo programado PT", unit: "s", kind: "number", default: 5, min: 0, group: "basic" }],
+  block: (p) => {
+    const PT = p.num("PT");
+    return {
+      ...frozen(3, () => [0, 1e30, 0])(p),
+      feedthrough: false,
+      out: (t, x, o, _u, y) => {
+        y[0] = x[o];
+        y[1] = x[o + 1] < 1e29 ? Math.min(Math.max(t - x[o + 2], 0), PT) : x[o];
+        if (x[o] >= 0.5) y[1] = PT;
+      },
+      discrete: {
+        nGuards: 2,
+        guards: (t, x, o, u, g) => {
+          g[0] = u[0] - 0.5;
+          g[1] = t - x[o + 1];
+        },
+        fire: (t, x, o, _u, prev, next, init) => {
+          const on = next[0] >= 0.5;
+          const was = !init && prev[0] >= 0.5;
+          if (!on) {
+            x[o] = 0;
+            x[o + 1] = 1e30;
+          } else if (!was) {
+            x[o] = 0;
+            x[o + 2] = t;
+            x[o + 1] = t + PT;
+            if (PT <= 0) {
+              x[o] = 1;
+              x[o + 1] = 1e30;
+            }
+          } else if (prev[1] < 0.5 && next[1] >= 0.5 && x[o + 1] < 1e29) {
+            x[o] = 1;
+            x[o + 1] = 1e30;
+          }
+        },
+      },
+    };
+  },
+});

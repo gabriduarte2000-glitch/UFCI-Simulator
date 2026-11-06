@@ -6,7 +6,7 @@ import { dcMotorLoad, flexibleShaft, geared, massSpringDamper, positionServo, qu
 import { rainTreatment } from "./situations-tcc";
 import { chirpResonance, digitalPid, noisyFilter, notchDemo, relayOven } from "./situations-ctrl";
 import { commonEmitter, counterDisplay, dacStaircase, fullAdderGates, halfWaveRectifier, invertingAmp, mosfetSwitch, norLatch, thermostat, timer555Astable, zenerRegulator } from "./situations-semi";
-import { fridgeCompressor, trafficLight } from "./situations-ics";
+import { fridgeCompressor, trafficLadder, trafficLight } from "./situations-ics";
 import type { ProjectIR } from "./types";
 
 export type SituationGroup = "control" | "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
@@ -269,6 +269,7 @@ export const SITUATIONS: Situation[] = [
   { id: "sr-latch", group: "digital", title: "Latch SR com portas NOR", description: "Duas portas NOR com realimentação cruzada guardam 1 bit de memória.", explore: "O pulso em S põe Q em 1. Ele continua em 1 quando S volta a 0. O pulso em R zera.", make: norLatch },
   { id: "dac-stair", group: "digital", title: "Contador com conversor D/A", description: "O contador de 4 bits alimenta um DAC e gera uma rampa em escada de 0 a 5 V.", explore: "Aumente os bits do contador e do DAC para 6 e veja a escada ficar mais fina.", make: dacStaircase },
   { id: "thermostat", group: "digital", title: "Termostato liga-desliga com histerese", description: "Um comparador com histerese liga e desliga a resistência de um tanque d'água entre 58 e 62 °C.", explore: "Aumente a histerese e veja a temperatura oscilar numa faixa maior, com menos chaveamentos.", make: thermostat },
+  { id: "traffic-ladder", group: "digital", title: "Semáforo com temporizadores TON (estilo ladder)", description: "Quatro temporizadores TON em cadeia, como no CLP: verde dos veículos, amarelo, todos vermelhos e verde dos pedestres. Você digita o tempo de cada fase.", explore: "Clique em cada temporizador e mude o tempo programado PT. Aumente T1 para 20 s e veja o verde dos veículos durar mais.", make: trafficLadder },
   { id: "traffic-light", group: "digital", title: "Semáforo de veículos e pedestres (CI 4017)", description: "Um clock de 1 Hz avança o 4017. Portas OU juntam as saídas e acendem 3 LEDs para veículos e 2 para pedestres, em ciclo de 10 s.", explore: "Troque o clock para 0,5 Hz e veja cada fase durar o dobro. Mude as saídas ligadas nas portas OU para alterar o tempo do verde.", make: trafficLight },
   { id: "fridge", group: "digital", title: "Refrigerador com compressor protegido (74123)", description: "Termostato com histerese pede o compressor. Um monoestável 74123 bloqueia nova partida por 120 s depois de cada desligamento.", explore: "Abra a porta com o controle deslizante e veja a temperatura subir. Troque R1 e C1 do 74123 para mudar o tempo de bloqueio.", make: fridgeCompressor },
   { id: "digital-pid", group: "control", title: "Controle digital: PID discreto com ZOH", description: "PID amostrado a cada 50 ms controlando uma planta de 2ª ordem, com saída limitada e anti-windup.", explore: "Aumente o período de amostragem Ts e veja a malha perder estabilidade.", make: digitalPid },
