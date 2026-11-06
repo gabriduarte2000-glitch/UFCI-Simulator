@@ -109,6 +109,21 @@ export function Library() {
       <span>
         <Mark text={d.label} q={q} />
       </span>
+      {d.datasheet && (
+        <span
+          className="lib-ds"
+          role="button"
+          tabIndex={0}
+          title="Ver o datasheet"
+          aria-label={`Datasheet do ${d.datasheet}`}
+          onClick={(e) => (e.stopPropagation(), useUi.getState().setDatasheet(d.datasheet!))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") (e.preventDefault(), e.stopPropagation(), useUi.getState().setDatasheet(d.datasheet!));
+          }}
+        >
+          DS
+        </span>
+      )}
     </button>
   );
 

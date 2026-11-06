@@ -34,6 +34,8 @@ interface Ui {
   chartMode: ChartMode;
   mathTab: MathTab;
   cloudOpen: boolean;
+  datasheet: string | null;
+  setDatasheet(part: string | null): void;
   cloudId: string | null;
   setCloudOpen(v: boolean): void;
   setCloudId(id: string | null): void;
@@ -61,6 +63,8 @@ export const useUi = create<Ui>((set) => ({
   chartMode: "unit",
   mathTab: "analise",
   cloudOpen: false,
+  datasheet: null,
+  setDatasheet: (datasheet) => set({ datasheet }),
   cloudId: null,
   setCloudOpen: (cloudOpen) => set({ cloudOpen }),
   setCloudId: (cloudId) => set({ cloudId }),

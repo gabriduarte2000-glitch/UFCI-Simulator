@@ -97,7 +97,9 @@ export function catalogText(): string {
     const defs = allDefs().filter((d) => d.category === cat.id);
     if (!defs.length) continue;
     lines.push(`${cat.label}:`);
-    for (const d of defs) {
+    const ics = defs.filter((d) => d.datasheet && d.type.startsWith("ic."));
+    if (ics.length) lines.push(`- ic.<número> = CIs: ${ics.map((d) => d.type.slice(3)).join(", ")}. Portas têm o nome do pino (ex.: CLK, A, QA); pinos ativos em baixo levam n na frente (!CLR vira nCLR).`);
+    for (const d of defs.filter((x) => !ics.includes(x))) {
       const ports = portsOf(d, Object.fromEntries(d.params.map((p) => [p.key, { value: p.default }]))).map((p) => `${p.name}${p.dir === "out" ? "(saída)" : p.dir === "in" ? "(entrada)" : ""}`);
       lines.push(`- ${d.type} = ${d.label}; portas ${ports.join(", ")}`);
     }

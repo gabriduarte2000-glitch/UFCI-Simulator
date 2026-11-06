@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getDef, portsOf, validateParam, type ComponentInstance, type ParamDef, type ParamOrigin } from "@ufci/engine";
 import { useProject } from "../store";
+import { useUi } from "../ui";
 import { useLive } from "../live";
 import { Icon } from "./Icon";
 import { nodeSize, SymbolArt } from "./Symbols";
@@ -158,6 +159,11 @@ function ComponentPanel({ comp }: { comp: ComponentInstance }) {
         </div>
       </div>
       <p className="comp-desc">{def.description}</p>
+      {def.datasheet && (
+        <button type="button" className="ds-open" onClick={() => useUi.getState().setDatasheet(def.datasheet!)}>
+          Ver datasheet do {def.datasheet}
+        </button>
+      )}
       <div className="tabs small" role="tablist">
         {tabs.map((t) => (
           <button key={t.id} role="tab" aria-selected={active === t.id} className={active === t.id ? "on" : ""} onClick={() => setTab(t.id)}>

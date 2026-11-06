@@ -2,7 +2,7 @@
 // de transferência, círculo somador, triângulo de ganho.
 
 import { useId } from "react";
-import type { ParamValue } from "@ufci/engine";
+import { getDatasheet, type ParamValue } from "@ufci/engine";
 import { semiArt, semiSize } from "./SymbolsSemi";
 
 type Params = Record<string, ParamValue>;
@@ -147,6 +147,7 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
     }
     default:
       if (isGeneric(symbol)) return genericSize(symbol);
+      if (symbol.startsWith("ic:")) return icSize(symbol);
       return semiSize(symbol, p) ?? { w: 92, h: 56 };
   }
 }
@@ -165,6 +166,18 @@ function genericSize(symbol: string): NodeSize {
   const wa = a.length * (frac ? 7.4 : 10.5),
     wb = b.length * (frac ? 7.4 : 6.6);
   return { w: Math.round(Math.min(220, Math.max(88, Math.max(wa, wb) + 28))), h: b ? 64 : 56 };
+}
+
+// CI genérico "ic:<número>": caixa com o nome do CI; as portas seguem os pinos do datasheet.
+function icCounts(symbol: string): { l: number; r: number; part: string } {
+  const part = symbol.slice(3);
+  const ds = getDatasheet(part);
+  return { part, l: ds ? ds.pins.filter((q) => q.dir === "in").length : 2, r: ds ? ds.pins.filter((q) => q.dir === "out").length : 2 };
+}
+function icSize(symbol: string): NodeSize {
+  const { l, r } = icCounts(symbol);
+  const n = Math.max(l, r, 3);
+  return { w: 132, h: Math.round(Math.max(84, 36 + n * 20)) };
 }
 
 /** Quebra o texto de uma nota em linhas curtas. */
@@ -829,6 +842,18 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
             ) : (
               txt(cx, cy, a, a.length > 6 ? 14 : 19, "middle", 600)
             )}
+          </>
+        );
+      }
+      if (symbol.startsWith("ic:")) {
+        const { part } = icCounts(symbol);
+        const ds = getDatasheet(part);
+        return (
+          <>
+            <rect x={1} y={1} width={w - 2} height={h - 2} rx={4} fill="#fff" stroke={stroke} strokeWidth={1.8} />
+            <path d={`M${cx - 9} 1a9 9 0 0018 0`} fill="none" stroke={stroke} strokeWidth={1.4} />
+            {txt(cx, 26, part, 15, "middle", 700)}
+            {txt(cx, 42, ds ? `${ds.family} · ${ds.pkg}` : "CI", 9.5, "middle", 400)}
           </>
         );
       }

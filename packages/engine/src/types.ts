@@ -16,6 +16,8 @@ export interface PortDef {
   dir: PortDir;
   /** Entrada que pode ficar sem fio. */
   optional?: boolean;
+  /** Valor lido quando a entrada fica sem fio (padrão 0). Entradas TTL soltas valem nível alto. */
+  idle?: number;
   /** Unidade da grandeza que passa pela porta (exibida em tabelas e instrumentos). */
   unit?: string;
   /** Rótulo curto mostrado no símbolo, ao lado da porta. */

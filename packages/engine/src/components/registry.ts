@@ -41,7 +41,7 @@ export interface BlockImpl {
   discrete?: BlockDiscrete;
 }
 
-export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi";
+export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi" | "icgate" | "icff" | "iccount" | "icreg" | "icmsi" | "ictime";
 
 export interface ComponentDef {
   type: string;
@@ -63,6 +63,8 @@ export interface ComponentDef {
   labelPrefix: string;
   /** Palavras extras para a busca (sinônimos, nomes em inglês, usos). */
   keywords?: string;
+  /** Código do datasheet resumido (CIs). */
+  datasheet?: string;
 }
 
 export type GroupId = "signals" | "control" | "process" | "mechanical" | "electrical" | "digital" | "other";
@@ -95,8 +97,14 @@ export const CATEGORIES: { id: CategoryId; label: string; group: GroupId; availa
   { id: "elec", label: "Circuitos elétricos", group: "electrical", available: true },
   { id: "electromech", label: "Eletromecânico", group: "electrical", available: true },
   { id: "semi", label: "Semicondutores e amplificadores", group: "electrical", available: true },
-  { id: "dgate", label: "Portas e lógica", group: "digital", available: true },
-  { id: "dseq", label: "Sequenciais e CIs", group: "digital", available: true },
+  { id: "dgate", label: "Blocos genéricos de lógica", group: "digital", available: true },
+  { id: "dseq", label: "Blocos genéricos sequenciais", group: "digital", available: true },
+  { id: "icgate", label: "CIs: portas lógicas (74xx e 40xx)", group: "digital", available: true },
+  { id: "icff", label: "CIs: flip-flops e latches", group: "digital", available: true },
+  { id: "iccount", label: "CIs: contadores", group: "digital", available: true },
+  { id: "icreg", label: "CIs: registradores de deslocamento", group: "digital", available: true },
+  { id: "icmsi", label: "CIs: decodificadores, mux, aritmética e display", group: "digital", available: true },
+  { id: "ictime", label: "CIs: temporizadores e monoestáveis", group: "digital", available: true },
   { id: "notes", label: "Anotações", group: "other", available: true },
 ];
 

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { AssistantDock } from "./components/AssistantDock";
 import { CloudDialog } from "./components/CloudDialog";
+import { DatasheetDialog } from "./components/DatasheetDialog";
 import { TopBar } from "./components/TopBar";
 import { Library } from "./components/Library";
 import { Canvas } from "./components/Canvas";
@@ -42,6 +43,7 @@ export function App() {
       <div className="app">
         <TopBar />
         <CloudDialog />
+        <DatasheetDialog />
         {/* A montagem fica sempre montada (só escondida) para manter o zoom e a posição da vista. */}
         <div className="main" hidden={page !== "montagem"}>
           {compact ? (

@@ -3,6 +3,7 @@ import { Handle, Position, useUpdateNodeInternals, type NodeProps, type Node } f
 import { getDef, portsOf, type ParamValue } from "@ufci/engine";
 import { useHasInputWire, useLiveIns, useLiveInput, useLiveOut } from "../liveOut";
 import { useProject } from "../store";
+import { useUi } from "../ui";
 import { nodeSize, SymbolArt } from "./Symbols";
 
 export interface BlockData extends Record<string, unknown> {
@@ -31,6 +32,7 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
   const liveIns = useLiveIns(id, def?.symbol ?? "");
   const liveOut = useMemo(() => ({ ...liveOut0, ...liveIns }), [liveOut0, liveIns]);
   const setParam = useProject((s) => s.setParam);
+  const setDatasheet = useUi((s) => s.setDatasheet);
   const twWire = useHasInputWire(id, "Tw");
   const twVal = useLiveInput(id, "Tw");
   const size = def ? nodeSize(def.symbol, data.params) : { w: 0, h: 0 };
@@ -104,6 +106,11 @@ function BlockNodeImpl({ id, data, selected }: NodeProps<BlockNodeT>) {
             setParam(id, "on", data.params.on?.value !== true);
           }}
         />
+      )}
+      {def.datasheet && (
+        <button type="button" className="ds-badge nodrag nopan" aria-label={`Abrir o datasheet do ${def.datasheet}`} title="Abrir o datasheet deste CI" onClick={(e) => (e.stopPropagation(), setDatasheet(def.datasheet!))}>
+          DS
+        </button>
       )}
       {!isNote && (
         <div className="node-title" style={{ top: h + (hasBottom ? 11 : 5) }}>

@@ -355,6 +355,7 @@ export function compile(project: ProjectIR): CompileResult {
     const producedIdx = outPorts.map((p) => outSig.get(`${ci.inst.id}.${p.name}`)!);
     const slot = { impl };
     blockImpls.set(ci.inst.id, slot);
+    const idle = inPorts.map((p) => p.idle ?? 0);
     const u = new Array<number>(inPorts.length).fill(0);
     const y = new Array<number>(outPorts.length).fill(0);
     const unit: Unit = {
@@ -368,15 +369,15 @@ export function compile(project: ProjectIR): CompileResult {
       x0: () => slot.impl.x0(),
       evalOut: (t, x, sig) => {
         const im = slot.impl;
-        if (im.feedthrough) for (let i = 0; i < u.length; i++) u[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : 0;
-        else u.fill(0);
+        if (im.feedthrough) for (let i = 0; i < u.length; i++) u[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : idle[i];
+        else for (let i = 0; i < u.length; i++) u[i] = idle[i];
         im.out(t, x, unit.off, u, y);
         for (let j = 0; j < producedIdx.length; j++) sig[producedIdx[j]] = y[j];
       },
       evalDer: (t, x, sig, dx) => {
         const im = slot.impl;
         if (im.nStates === 0) return;
-        for (let i = 0; i < u.length; i++) u[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : 0;
+        for (let i = 0; i < u.length; i++) u[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : idle[i];
         im.der(t, x, unit.off, u, dx);
       },
       breakpoints: (t0, tf) => slot.impl.breakpoints?.(t0, tf) ?? [],
@@ -400,7 +401,7 @@ export function compile(project: ProjectIR): CompileResult {
       const nl = new Array<number>(ng).fill(0);
       const uAll = new Array<number>(inPorts.length).fill(0);
       const gather = (sig: Float64Array) => {
-        for (let i = 0; i < uAll.length; i++) uAll[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : 0;
+        for (let i = 0; i < uAll.length; i++) uAll[i] = inputIdx[i] >= 0 ? sig[inputIdx[i]] : idle[i];
       };
       unit.nGuards = ng;
       unit.guards = (t, x, sig, g) => {
