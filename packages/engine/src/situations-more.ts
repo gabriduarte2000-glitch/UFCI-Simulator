@@ -43,7 +43,7 @@ export function crossroads(): ProjectIR {
   );
 }
 
-/** Travessia por botão: o monoestável 74123 libera o verde dos pedestres por um tempo fixo. */
+/** Travessia por botão: dois monoestáveis 74123. O primeiro dá o tempo total, o segundo o verde. No fim, o vermelho dos pedestres pisca. */
 export function pedestrianButton(): ProjectIR {
   return build(
     "Semáforo com botão de pedestre (74123)",
@@ -52,46 +52,59 @@ export function pedestrianButton(): ProjectIR {
       sw("btn", "Botão do pedestre (clique para apertar)", false, 0, 180),
       { id: "or", type: "dig.or", label: "Qualquer botão", pos: [200, 90] },
       sw("zero", "!A = 0", false, 200, 240),
-      { id: "m", type: "ic.74123", label: "74123 (tempo de travessia ≈ 10 s)", params: { R1: 1000, C1: 36 }, pos: [400, 40] },
-      led("lvg", "Veículos: verde", "green", 700, 20), led("lvr", "Veículos: vermelho", "red", 700, 100),
-      led("lpg", "Pedestres: verde", "green", 700, 200), led("lpr", "Pedestres: vermelho", "red", 700, 280),
-      { id: "scope", type: "sink.scope", label: "Botão e travessia", pos: [900, 120] },
+      { id: "m", type: "ic.74123", label: "74123 (monoestável 1 ≈ 10 s; monoestável 2 ≈ 6 s)", params: { R1: 1000, C1: 36, R2: 1000, C2: 21.4 }, pos: [400, 40] },
+      clk("pisca", "Pisca do vermelho (2 Hz)", 2, 400, 360),
+      { id: "nk", type: "dig.not", label: "Pisca invertido", pos: [620, 380] },
+      { id: "pg", type: "dig.and", label: "Pedestre verde = 1Q e 2Q", pos: [700, 120] },
+      { id: "n2", type: "dig.not", label: "NÃO 2Q", pos: [700, 220] },
+      { id: "fl", type: "dig.and", label: "Fase de piscar = 1Q e não 2Q", pos: [860, 240] },
+      { id: "off", type: "dig.and", label: "Apagado = piscar e pisca em 0", pos: [860, 360] },
+      { id: "pr", type: "dig.nor", label: "Pedestre vermelho", pos: [1040, 260] },
+      led("lvg", "Veículos: verde", "green", 1040, 20), led("lvr", "Veículos: vermelho", "red", 1040, 100),
+      led("lpg", "Pedestres: verde", "green", 1220, 160), led("lpr", "Pedestres: vermelho (pisca)", "red", 1220, 260),
+      { id: "scope", type: "sink.scope", label: "Travessia", pos: [1220, 400] },
     ],
     [
-      ["auto", "y", "or", "a"], ["btn", "y", "or", "b"], ["or", "y", "m", "1B"], ["zero", "y", "m", "n1A"],
-      ["m", "n1Q", "lvg", "a"], ["m", "1Q", "lvr", "a"], ["m", "1Q", "lpg", "a"], ["m", "n1Q", "lpr", "a"],
-      ["or", "y", "scope", "in1"], ["m", "1Q", "scope", "in2"],
+      ["auto", "y", "or", "a"], ["btn", "y", "or", "b"], ["or", "y", "m", "1B"], ["or", "y", "m", "2B"], ["zero", "y", "m", "n1A"], ["zero", "y", "m", "n2A"],
+      ["m", "1Q", "pg", "a"], ["m", "2Q", "pg", "b"], ["m", "2Q", "n2", "a"], ["m", "1Q", "fl", "a"], ["n2", "y", "fl", "b"],
+      ["pisca", "y", "nk", "a"], ["fl", "y", "off", "a"], ["nk", "y", "off", "b"], ["pg", "y", "pr", "a"], ["off", "y", "pr", "b"],
+      ["m", "n1Q", "lvg", "a"], ["m", "1Q", "lvr", "a"], ["pg", "y", "lpg", "a"], ["pr", "y", "lpr", "a"],
+      ["or", "y", "scope", "in1"], ["pg", "y", "scope", "in2"], ["pr", "y", "scope", "in3"],
     ],
     { tf: 60, solver: "rk4", h: 0.01 },
   );
 }
 
-/** Semáforo com contador 74163 e decodificador 74138. */
+/** Semáforo com contador 74163 e decodificador 74138. O estado 7 pisca o vermelho dos pedestres antes do verde dos veículos. */
 export function trafficCounterDecoder(): ProjectIR {
   return build(
     "Semáforo com 74163 e 74138",
     [
-      clk("ck", "Clock 1 Hz", 1, 0, 100), sw("one", "Nível 1", true, 0, 260), sw("zero", "Nível 0", false, 0, 340),
+      clk("ck", "Clock 1 Hz", 1, 0, 100), clk("pisca", "Pisca do vermelho (4 Hz)", 4, 0, 440), sw("one", "Nível 1", true, 0, 260), sw("zero", "Nível 0", false, 0, 340),
       { id: "c", type: "ic.74163", label: "74163 (contador)", pos: [220, 60] },
       { id: "d", type: "ic.74138", label: "74138 (decodificador)", pos: [460, 40] },
-      { id: "vg", type: "dig.nand", label: "Veículo verde (estados 0 a 3)", params: { n: 4 }, pos: [740, 0] },
-      { id: "vy", type: "dig.not", label: "Veículo amarelo (estado 4)", pos: [740, 120] },
-      { id: "vr", type: "dig.nand", label: "Veículo vermelho (estados 5 a 7)", params: { n: 3 }, pos: [740, 200] },
-      { id: "pg", type: "dig.nand", label: "Pedestre verde (estados 6 e 7)", params: { n: 2 }, pos: [740, 320] },
-      { id: "pr", type: "dig.not", label: "Pedestre vermelho", pos: [920, 340] },
+      { id: "vg", type: "dig.nand", label: "Veículo verde (estados 0 a 2)", params: { n: 3 }, pos: [740, 0] },
+      { id: "vy", type: "dig.not", label: "Veículo amarelo (estado 3)", pos: [740, 120] },
+      { id: "vr", type: "dig.nand", label: "Veículo vermelho (estados 4 a 7)", params: { n: 4 }, pos: [740, 200] },
+      { id: "pg", type: "dig.nand", label: "Pedestre verde (estados 5 e 6)", params: { n: 2 }, pos: [740, 320] },
+      { id: "fl", type: "dig.not", label: "Fase de piscar (estado 7)", pos: [740, 420] },
+      { id: "nk", type: "dig.not", label: "Pisca invertido", pos: [740, 500] },
+      { id: "off", type: "dig.and", label: "Apagado na fase de piscar", pos: [920, 440] },
+      { id: "pr", type: "dig.nor", label: "Pedestre vermelho", pos: [1100, 360] },
       led("lvg", "Veículos: verde", "green", 940, 0), led("lvy", "Veículos: amarelo", "yellow", 940, 100), led("lvr", "Veículos: vermelho", "red", 940, 200),
-      led("lpg", "Pedestres: verde", "green", 1100, 300), led("lpr", "Pedestres: vermelho", "red", 1100, 400),
+      led("lpg", "Pedestres: verde", "green", 1280, 300), led("lpr", "Pedestres: vermelho (pisca)", "red", 1280, 400),
     ],
     [
       ["ck", "y", "c", "CLK"], ["one", "y", "c", "ENP"], ["one", "y", "c", "ENT"],
       ["c", "QA", "d", "A"], ["c", "QB", "d", "B"], ["c", "QC", "d", "C"], ["one", "y", "d", "G1"], ["zero", "y", "d", "nG2A"], ["zero", "y", "d", "nG2B"],
-      ["d", "nY0", "vg", "a"], ["d", "nY1", "vg", "b"], ["d", "nY2", "vg", "c"], ["d", "nY3", "vg", "d"],
-      ["d", "nY4", "vy", "a"],
-      ["d", "nY5", "vr", "a"], ["d", "nY6", "vr", "b"], ["d", "nY7", "vr", "c"],
-      ["d", "nY6", "pg", "a"], ["d", "nY7", "pg", "b"], ["pg", "y", "pr", "a"],
+      ["d", "nY0", "vg", "a"], ["d", "nY1", "vg", "b"], ["d", "nY2", "vg", "c"],
+      ["d", "nY3", "vy", "a"],
+      ["d", "nY4", "vr", "a"], ["d", "nY5", "vr", "b"], ["d", "nY6", "vr", "c"], ["d", "nY7", "vr", "d"],
+      ["d", "nY5", "pg", "a"], ["d", "nY6", "pg", "b"],
+      ["d", "nY7", "fl", "a"], ["pisca", "y", "nk", "a"], ["fl", "y", "off", "a"], ["nk", "y", "off", "b"], ["pg", "y", "pr", "a"], ["off", "y", "pr", "b"],
       ["vg", "y", "lvg", "a"], ["vy", "y", "lvy", "a"], ["vr", "y", "lvr", "a"], ["pg", "y", "lpg", "a"], ["pr", "y", "lpr", "a"],
     ],
-    { tf: 20, solver: "rk4", h: 0.01 },
+    { tf: 20, solver: "rk4", h: 0.005 },
   );
 }
 

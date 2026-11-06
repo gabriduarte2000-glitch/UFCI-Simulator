@@ -44,19 +44,28 @@ describe("situações novas", () => {
     expect(R(at(sim, "bg.y", 20))).toBe(1);
     expect(R(at(sim, "n1.y", 35))).toBe(1);
   });
-  it("botão de pedestre: pulso de cerca de 10 s", () => {
+  it("botão de pedestre: verde, depois vermelho piscando, depois veículos", () => {
     const sim = go("ped-button");
     expect(R(at(sim, "m.n1Q", 10))).toBe(1);
-    expect(R(at(sim, "m.1Q", 20))).toBe(1);
-    expect(R(at(sim, "m.1Q", 30))).toBe(0);
+    expect(R(at(sim, "pg.y", 18))).toBe(1);
+    expect(R(at(sim, "pg.y", 23))).toBe(0);
+    const seq = [] as number[];
+    for (let t = 21.3; t < 24.8; t += 0.25) seq.push(R(at(sim, "pr.y", t)));
+    expect(seq.includes(0) && seq.includes(1)).toBe(true);
+    expect(R(at(sim, "m.n1Q", 30))).toBe(1);
+    expect(R(at(sim, "pr.y", 30))).toBe(1);
   });
-  it("74163 + 74138: estados do semáforo", () => {
+  it("74163 + 74138: estados do semáforo e vermelho piscando no estado 7", () => {
     const sim = go("traffic-138");
-    expect(R(at(sim, "vg.y", 2.5))).toBe(1);
-    expect(R(at(sim, "vy.y", 4.5))).toBe(1);
-    expect(R(at(sim, "vr.y", 5.5))).toBe(1);
+    expect(R(at(sim, "vg.y", 1.5))).toBe(1);
+    expect(R(at(sim, "vy.y", 3.5))).toBe(1);
+    expect(R(at(sim, "vr.y", 4.5))).toBe(1);
+    expect(R(at(sim, "pg.y", 5.5))).toBe(1);
     expect(R(at(sim, "pg.y", 6.5))).toBe(1);
-    expect(R(at(sim, "pr.y", 3.5))).toBe(1);
+    expect(R(at(sim, "pg.y", 7.5))).toBe(0);
+    const seq = [7.05, 7.2, 7.3, 7.45, 7.55, 7.7, 7.8, 7.95].map((t) => R(at(sim, "pr.y", t)));
+    expect(seq.includes(0) && seq.includes(1)).toBe(true);
+    expect(R(at(sim, "pr.y", 2.5))).toBe(1);
     expect(R(at(sim, "vg.y", 8.5))).toBe(1);
   });
   it("7490 chega a 9 e volta a 0", () => {

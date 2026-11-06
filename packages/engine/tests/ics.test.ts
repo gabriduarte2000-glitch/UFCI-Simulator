@@ -104,20 +104,24 @@ describe("CIs: registradores, MSI e monoestável", () => {
 import { fridgeCompressor, trafficLight } from "../src/situations-ics";
 
 describe("situações com CIs", () => {
-  it("semáforo: ciclo de 10 s, sem verde simultâneo e sempre um vermelho", () => {
+  it("semáforo 4017: pedestre pisca o vermelho antes do verde dos veículos", () => {
     const sim = run(trafficLight());
     const g = (id: string, t: number) => R(at(sim, id, t));
-    for (let t = 0.5; t < 20; t += 1) {
-      const vg = g("vg.y", t), vr = g("vr.y", t), vy = g("u.Q4", t), pg = g("pg.y", t), pr = g("pn.y", t);
+    for (let t = 0.1; t < 20; t += 0.1) {
+      const vg = g("vg.y", t), vr = g("vr.y", t), vy = g("u.Q4", t), pg = g("pg.y", t);
       expect(vg + vy + vr, `veículos t=${t}`).toBe(1);
-      expect(pg + pr, `pedestres t=${t}`).toBe(1);
-      expect(pg && vg, `conflito t=${t}`).toBe(0);
-      expect(pg && vy, `conflito amarelo t=${t}`).toBe(0);
+      expect(pg && !vr ? 1 : 0, `ped verde sem veículo vermelho t=${t}`).toBe(0);
+      if (vg) expect(g("pr.y", t), `vermelho fixo com veículo verde t=${t}`).toBe(1);
+      if (pg) expect(g("pr.y", t), `verde e vermelho juntos t=${t}`).toBe(0);
     }
     expect(g("vg.y", 1.5)).toBe(1);
     expect(g("u.Q4", 4.5)).toBe(1);
+    expect(g("pg.y", 6.5)).toBe(1);
     expect(g("pg.y", 7.5)).toBe(1);
-    expect(g("vg.y", 11.5)).toBe(1);
+    expect(g("pg.y", 8.5)).toBe(0);
+    const reds = [8.1, 8.3, 8.6, 8.8, 9.1, 9.3, 9.6, 9.8].map((t) => g("pr.y", t));
+    expect(reds.includes(0) && reds.includes(1)).toBe(true); // pisca
+    expect(g("vg.y", 10.5)).toBe(1);
   });
   it("refrigerador: esfria, respeita o bloqueio de 120 s e a porta aberta esquenta", () => {
     const sim = run(fridgeCompressor());
@@ -140,20 +144,27 @@ describe("situações com CIs", () => {
 
 import { trafficLadder } from "../src/situations-ics";
 describe("TON e semáforo ladder", () => {
-  it("fases respeitam os tempos programados e ciclo de 23 s", () => {
+  it("ciclo de 27 s com pedestre piscando antes do verde dos veículos", () => {
     const sim = run(trafficLadder());
     const g = (id: string, t: number) => R(at(sim, id, t));
     expect(g("n1.y", 5)).toBe(1);
     expect(g("ay.y", 11)).toBe(1);
     expect(g("t2.q", 14)).toBe(1);
-    expect(g("ap.y", 16)).toBe(1);
-    expect(g("ap.y", 22)).toBe(1);
-    expect(g("n1.y", 28)).toBe(1); // novo ciclo: verde de novo
-    expect(g("ay.y", 36)).toBe(1);
-    for (let t = 0.5; t < 58; t += 0.5) {
-      const vg = g("n1.y", t), vy = g("ay.y", t), vr = g("t2.q", t), pg = g("ap.y", t);
-      expect(vg + vy + vr, `t=${t}`).toBe(1);
-      expect(Number(!!pg && !vr), `ped sem veículo vermelho t=${t}`).toBe(0);
+    expect(g("pg.y", 16)).toBe(1);
+    expect(g("pg.y", 22)).toBe(1);
+    expect(g("pg.y", 24)).toBe(0);
+    const seq = [] as number[];
+    for (let t = 23.2; t < 26.9; t += 0.25) seq.push(g("pr.y", t));
+    let changes = 0;
+    for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) changes++;
+    expect(changes).toBeGreaterThanOrEqual(3);
+    expect(g("n1.y", 28)).toBe(1);
+    expect(g("pr.y", 28)).toBe(1);
+    for (let t = 0.25; t < 58; t += 0.25) {
+      const veh = g("n1.y", t) + g("ay.y", t) + g("t2.q", t);
+      expect(veh, `t=${t}`).toBe(1);
+      expect(g("pg.y", t) && !g("t2.q", t) ? 1 : 0, `ped verde com veículo livre t=${t}`).toBe(0);
+      if (g("pg.y", t)) expect(g("pr.y", t), `t=${t}`).toBe(0);
     }
   });
 });
