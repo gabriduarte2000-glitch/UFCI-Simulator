@@ -539,3 +539,228 @@ export function circuitTable(ir: ProjectIR, inputIds: string[], signal: string):
   }
   return out;
 }
+
+// ------------------------------------------------------------------------------------------------ equações lidas da estrutura do circuito
+
+type X = { t: "leaf"; key: string } | { t: "const"; v: 0 | 1 } | { t: "not"; a: X } | { t: "gate"; op: "and" | "or" | "nand" | "nor" | "xor" | "xnor"; args: X[] };
+
+export interface Leaf {
+  /** Letra usada nas equações (A, B, C...). */
+  name: string;
+  /** Sinal da simulação (componente.porta). */
+  signal: string;
+  /** Nome do componente e tipo, para legenda. */
+  label: string;
+  kind: "chave" | "clock" | "memória" | "bloco";
+}
+
+export interface ReadOutput {
+  label: string;
+  signal: string;
+  /** Equação como o circuito foi desenhado (sem reduzir). */
+  structure: string;
+  /** Variáveis de que a saída depende (letras, ordem alfabética) e tabela. */
+  vars: string[];
+  vals: Cell[];
+  tooMany: boolean;
+}
+
+export interface PhaseRow {
+  t0: number;
+  t1: number;
+  /** Nível de cada coluna (folhas e saídas). 2 = pisca durante a fase. */
+  levels: (0 | 1 | 2)[];
+}
+
+export interface ReadCircuit {
+  leaves: Leaf[];
+  outputs: ReadOutput[];
+  /** Colunas da tabela de fases: nomes das folhas seguidos dos nomes das saídas. */
+  phaseCols: string[];
+  phases: PhaseRow[];
+  phasesCut: boolean;
+  timeUnit: string;
+  warnings: string[];
+}
+
+const GATE_OPS = new Set(["and", "or", "nand", "nor", "xor", "xnor"]);
+
+function evalX(x: X, a: Record<string, number>): number {
+  switch (x.t) {
+    case "leaf":
+      return a[x.key] ?? 0;
+    case "const":
+      return x.v;
+    case "not":
+      return 1 - evalX(x.a, a);
+    case "gate": {
+      const b = x.args.map((y) => evalX(y, a));
+      const all = b.every((v) => v === 1);
+      const any = b.some((v) => v === 1);
+      const par = b.reduce((s, v) => s ^ v, 0);
+      return x.op === "and" ? +all : x.op === "or" ? +any : x.op === "nand" ? +!all : x.op === "nor" ? +!any : x.op === "xor" ? par : 1 - par;
+    }
+  }
+}
+
+function leavesOf(x: X, out = new Set<string>()): Set<string> {
+  if (x.t === "leaf") out.add(x.key);
+  else if (x.t === "not") leavesOf(x.a, out);
+  else if (x.t === "gate") x.args.forEach((y) => leavesOf(y, out));
+  return out;
+}
+
+function showX(x: X, nm: (k: string) => string, prec = 0): string {
+  const wrap = (s: string, p: number) => (p < prec ? `(${s})` : s);
+  switch (x.t) {
+    case "leaf":
+      return nm(x.key);
+    case "const":
+      return String(x.v);
+    case "not":
+      return x.a.t === "leaf" ? `${nm(x.a.key)}'` : `${showX(x.a, nm, 4)}'`.replace(/^([^(].*)'$/, "($1)'");
+    case "gate": {
+      const sub = (p: number) => x.args.map((y) => showX(y, nm, p));
+      if (x.op === "and") return wrap(sub(3).join(""), 3);
+      if (x.op === "or") return wrap(sub(1).join(" + "), 1);
+      if (x.op === "xor") return wrap(sub(2).join(" ⊕ "), 2);
+      if (x.op === "nand") return `(${sub(3).join("")})'`;
+      if (x.op === "nor") return `(${sub(1).join(" + ")})'`;
+      return `(${sub(2).join(" ⊕ ")})'`;
+    }
+  }
+}
+
+/**
+ * Lê a lógica do quadro: portas viram a equação; chaves, clock, flip-flops, temporizadores e CIs viram variáveis
+ * (a saída deles é tratada como entrada da parte combinacional). Também roda a simulação e monta a tabela de fases.
+ */
+export function readCircuit(ir: ProjectIR): ReadCircuit {
+  const comp = new Map(ir.components.map((c) => [c.id, c]));
+  const warnings: string[] = [];
+  const driver = new Map<string, { c: string; p: string }>();
+  for (const k of ir.connections) driver.set(`${k.to.component}.${k.to.port}`, { c: k.from.component, p: k.from.port });
+  const leafInfo = new Map<string, { label: string; kind: Leaf["kind"] }>();
+
+  const nameOfSource = (id: string, port: string) => {
+    const c = comp.get(id)!;
+    const base = c.label || id;
+    const def = getDefLazy(c.type);
+    const nOut = def ? portCount(def, c) : 1;
+    return nOut > 1 ? `${base} · ${port}` : base;
+  };
+  const kindOf = (type: string): Leaf["kind"] => (type === "dig.switch" ? "chave" : type === "dig.clock" || type === "elec.timer555" ? "clock" : /^dig\.(dff|jkff|tff|srlatch|dlatch|counter|shiftreg|ton)$/.test(type) || type.startsWith("ic.") ? "memória" : "bloco");
+
+  const build = (id: string, port: string, seen: Set<string>): X => {
+    const c = comp.get(id);
+    if (!c) return { t: "const", v: 0 };
+    const key = `${id}.${port}`;
+    const kind = c.type.startsWith("dig.") ? c.type.slice(4) : "";
+    if ((GATE_OPS.has(kind) || kind === "not" || kind === "buf") && port === "y" && !seen.has(id)) {
+      const s = new Set(seen).add(id);
+      const ports = kind === "not" || kind === "buf" ? ["a"] : "abcdefgh".slice(0, Number(c.params.n?.value ?? 2)).split("");
+      const args: X[] = ports.map((p) => {
+        const d = driver.get(`${id}.${p}`);
+        return d ? build(d.c, d.p, s) : { t: "const", v: 0 };
+      });
+      if (kind === "not") return { t: "not", a: args[0] };
+      if (kind === "buf") return args[0];
+      return { t: "gate", op: kind as "and", args };
+    }
+    if (!leafInfo.has(key)) leafInfo.set(key, { label: nameOfSource(id, port), kind: kindOf(c.type) });
+    return { t: "leaf", key };
+  };
+
+  // Saídas: LEDs; se não houver, portas cuja saída não alimenta outra porta.
+  type Out = { label: string; x: X; signal: string };
+  const outs: Out[] = [];
+  for (const c of ir.components) {
+    if (c.type !== "dig.led") continue;
+    const d = driver.get(`${c.id}.a`);
+    if (d) outs.push({ label: c.label || c.id, x: build(d.c, d.p, new Set()), signal: `${d.c}.${d.p}` });
+  }
+  if (!outs.length) {
+    const feeds = new Set(ir.connections.map((k) => k.from.component));
+    for (const c of ir.components) {
+      if (/^dig\.(and|or|nand|nor|xor|xnor|not)$/.test(c.type) && !feeds.has(c.id)) outs.push({ label: c.label || c.id, x: build(c.id, "y", new Set()), signal: `${c.id}.y` });
+    }
+  }
+  if (!outs.length) warnings.push("Não achei saída. Ligue um LED à porta que dá o resultado.");
+
+  // Letras para as folhas, na ordem do rótulo.
+  const keys = [...leafInfo.keys()].sort((a, b) => leafInfo.get(a)!.label.localeCompare(leafInfo.get(b)!.label, "pt", { numeric: true }));
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const leaves: Leaf[] = keys.map((k, i) => ({ name: i < 26 ? letters[i] : `X${i}`, signal: k, label: leafInfo.get(k)!.label, kind: leafInfo.get(k)!.kind }));
+  const nameOf = (k: string) => leaves.find((l) => l.signal === k)!.name;
+
+  const outputs: ReadOutput[] = outs.map((o) => {
+    const sup = [...leavesOf(o.x)].sort((a, b) => nameOf(a).localeCompare(nameOf(b), "en", { numeric: true }));
+    const tooMany = sup.length > MAX_VARS;
+    const vals: Cell[] = [];
+    if (!tooMany && sup.length > 0)
+      for (let m = 0; m < 1 << sup.length; m++) {
+        const a: Record<string, number> = {};
+        sup.forEach((k, i) => (a[k] = bit(m, sup.length, i)));
+        vals.push(evalX(o.x, a) as Cell);
+      }
+    return { label: o.label, signal: o.signal, structure: showX(o.x, nameOf), vars: sup.map(nameOf), vals, tooMany };
+  });
+
+  if (leaves.some((l) => l.kind === "memória" || l.kind === "clock")) warnings.push("Temporizadores, clock e flip-flops entram como variáveis: a equação vale para a parte combinacional entre eles. A tabela de fases abaixo mostra o que acontece no tempo.");
+
+  // Tabela de fases por simulação.
+  let phases: PhaseRow[] = [];
+  let phasesCut = false;
+  const phaseCols: string[] = [];
+  try {
+    const sim = new Simulation(ir);
+    sim.runToEnd();
+    const idx = (s: string) => sim.signals.findIndex((x) => x.id === s);
+    const clockKeys = new Set(leaves.filter((l) => l.kind === "clock").map((l) => l.signal));
+    const cols = [
+      ...leaves.map((l) => ({ name: l.name, j: idx(l.signal), fast: clockKeys.has(l.signal) })),
+      ...outputs.map((o, oi) => ({ name: o.label, j: idx(o.signal), fast: [...leavesOf(outs[oi].x)].some((k) => clockKeys.has(k)) })),
+    ].filter((c) => c.j >= 0);
+    cols.forEach((c) => phaseCols.push(c.name));
+    const tv = sim.series.timeView();
+    const cv = cols.map((c) => sim.series.colView(c.j));
+    // Colunas rápidas (clock e saídas que dependem dele) não separam fases: viram "pisca" quando mudam dentro da fase.
+    const fast = cols.map((c) => c.fast);
+    const keyAt = (i: number) => cv.map((col, ci) => (fast[ci] ? "-" : col[i] >= 0.5 ? "1" : "0")).join("");
+    let start = 0;
+    const flush = (end: number, tEnd: number) => {
+      const lv = cv.map((col, ci) => {
+        if (!fast[ci]) return (col[start] >= 0.5 ? 1 : 0) as 0 | 1 | 2;
+        let a0 = 0,
+          a1 = 0;
+        for (let i = start; i <= end; i++) col[i] >= 0.5 ? a1++ : a0++;
+        return (a0 && a1 ? 2 : a1 ? 1 : 0) as 0 | 1 | 2;
+      });
+      phases.push({ t0: tv[start], t1: tEnd, levels: lv });
+    };
+    for (let i = 1; i <= tv.length; i++) {
+      if (i === tv.length || keyAt(i) !== keyAt(start)) {
+        const tEnd = i === tv.length ? tv[tv.length - 1] : tv[i];
+        if (tEnd - tv[start] > 1e-9) flush(i - 1, tEnd);
+        start = i;
+      }
+    }
+    if (phases.length > 60) {
+      phases = phases.slice(0, 60);
+      phasesCut = true;
+    }
+  } catch {
+    warnings.push("Não consegui simular para montar a tabela de fases.");
+  }
+  return { leaves, outputs, phaseCols, phases, phasesCut, timeUnit: ir.simulation.timeUnit ?? "s", warnings };
+}
+
+import { getDef as getDefLazy } from "./components/registry";
+function portCount(def: NonNullable<ReturnType<typeof getDefLazy>>, c: { params: Record<string, { value?: unknown }> }): number {
+  try {
+    const ports = typeof def.ports === "function" ? def.ports({ num: (k: string) => Number(c.params[k]?.value ?? 2) } as never) : def.ports;
+    return ports.filter((p) => p.dir === "out" || (p as { kind?: string }).kind === "out").length || 1;
+  } catch {
+    return 1;
+  }
+}

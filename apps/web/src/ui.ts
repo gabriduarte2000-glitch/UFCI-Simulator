@@ -18,6 +18,7 @@ export function useCompact(): boolean {
 
 export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicadores" | "math";
 /** Como os sinais escolhidos se distribuem nos gráficos. */
+export type DashView = "painel" | "graficos";
 export type ChartMode = "unit" | "each" | "all";
 export type MathTab = "analise" | "equacao" | "frequencia" | "logica";
 export type RightTab = "props" | "sim";
@@ -32,6 +33,8 @@ interface Ui {
   tool: "select" | "pan";
   chartSignal: number[];
   chartMode: ChartMode;
+  dashView: DashView;
+  setDashView(v: DashView): void;
   mathTab: MathTab;
   cloudOpen: boolean;
   datasheet: string | null;
@@ -69,7 +72,10 @@ export const useUi = create<Ui>((set) => ({
   setCloudOpen: (cloudOpen) => set({ cloudOpen }),
   setCloudId: (cloudId) => set({ cloudId }),
   setMathTab: (mathTab) => set({ mathTab }),
-  setPage: (page) => set({ page }),
+  // "graficos" foi unido ao dashboard: abre o dashboard na visão de gráficos.
+  setPage: (page) => (page === "graficos" ? set({ page: "dashboard", dashView: "graficos" }) : set({ page })),
+  dashView: "painel",
+  setDashView: (dashView) => set({ dashView }),
   setLeftOpen: (leftOpen) => set({ leftOpen }),
   setRightOpen: (rightOpen) => set({ rightOpen }),
   openRight: (rightTab) => set({ rightOpen: true, rightTab }),

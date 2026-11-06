@@ -6,7 +6,7 @@ import { Chart } from "../components/Chart";
 import { LiveInputs } from "../components/LiveInputs";
 import { groupByUnit, NoData, useScopeSignalList } from "./common";
 
-export function GraficosPage() {
+export function GraficosView() {
   const signals = useLive((s) => s.signals);
   const scopeSigs = useScopeSignalList();
   const chosen = useUi((s) => s.chartSignal);

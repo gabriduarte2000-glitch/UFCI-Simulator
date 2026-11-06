@@ -6,9 +6,11 @@ import { Chart } from "../components/Chart";
 import { Gauge } from "../components/Gauge";
 import { LiveInputs } from "../components/LiveInputs";
 import { PALETTE } from "../util";
+import { useUi } from "../ui";
+import { GraficosView } from "./GraficosPage";
 import { groupByUnit, NoData, useScopeSignalList } from "./common";
 
-export function DashboardPage() {
+function PainelView() {
   const scopes = useScopes();
   const signals = useLive((s) => s.signals);
   const current = useLive((s) => s.current);
@@ -91,6 +93,28 @@ export function DashboardPage() {
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
+
+export function DashboardPage() {
+  const view = useUi((s) => s.dashView);
+  const setView = useUi((s) => s.setDashView);
+  const empty = useLive((s) => s.signals.length === 0);
+  if (empty) return <NoData what="Dashboard" />;
+  return (
+    <div className="page-stack">
+      <div className="view-bar">
+        <div className="seg small" role="tablist" aria-label="Visão">
+          <button role="tab" aria-selected={view === "painel"} className={view === "painel" ? "on" : ""} onClick={() => setView("painel")}>
+            Painel
+          </button>
+          <button role="tab" aria-selected={view === "graficos"} className={view === "graficos" ? "on" : ""} onClick={() => setView("graficos")}>
+            Gráficos
+          </button>
+        </div>
+      </div>
+      {view === "painel" ? <PainelView /> : <GraficosView />}
     </div>
   );
 }

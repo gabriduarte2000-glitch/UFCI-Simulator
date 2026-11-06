@@ -74,3 +74,5 @@ Os valores padrão dos componentes são ilustrativos e aparecem marcados assim n
 ## Matemática: lógica digital
 
 A aba "Lógica digital" da página Matemática faz o passo a passo do projeto combinacional: enunciado, tabela-verdade (editável, com X), formas canônicas (soma de mintermos e produto de maxtermos), mapa de Karnaugh de 2 a 5 variáveis com os grupos coloridos, leitura de cada grupo, equação mínima (soma de produtos ou produto de somas), conferência linha por linha e o circuito de portas. Pode começar pela tabela, por uma equação ou pelo circuito montado no quadro (o programa liga cada combinação das chaves e lê o LED). O botão "Montar este circuito no quadro" faz o caminho inverso.
+
+A aba também lê circuitos com portas, temporizadores e clock: cada LED vira uma equação, chaves, clock, TON e flip-flops viram letras, e uma tabela de fases mostra o que acontece no tempo. Dashboard e Gráficos ficam na mesma aba, com duas visões (Painel e Gráficos).

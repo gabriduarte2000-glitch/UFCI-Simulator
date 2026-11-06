@@ -63,3 +63,18 @@ describe("lógica digital", () => {
     expect(circuitTable(ir, io.inputs.map((i) => i.id), led.signal)).toEqual(p.vals);
   });
 });
+
+import { readCircuit, SITUATIONS } from "../src/index";
+describe("leitura do circuito com temporizadores", () => {
+  it("semáforo ladder: equações e fases", () => {
+    const r = readCircuit(SITUATIONS.find((x) => x.id.includes("ladder"))!.make());
+    const g = r.outputs.find((o) => o.label === "Veículos: verde")!;
+    expect(g.vars.length).toBe(1);
+    expect(minimize(g.vars, g.vals).text).toBe(g.vars[0] + "'");
+    const y = r.outputs.find((o) => o.label === "Veículos: amarelo")!;
+    expect(minimize(y.vars, y.vals).text).toMatch(/^[A-Z][A-Z]'$/);
+    expect(r.phases.length).toBeGreaterThanOrEqual(5);
+    expect(r.phases.length).toBeLessThan(15);
+    expect(r.phases[0].t0).toBe(0);
+  });
+});

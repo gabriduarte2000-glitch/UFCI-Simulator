@@ -9,7 +9,6 @@ import { useTimeUnit } from "../timeunit";
 const PAGES: { id: Page; label: string; icon: string }[] = [
   { id: "montagem", label: "Montagem", icon: "build" },
   { id: "dashboard", label: "Dashboard", icon: "dash" },
-  { id: "graficos", label: "Gráficos", icon: "chartLine" },
   { id: "tabelas", label: "Tabelas", icon: "table" },
   { id: "indicadores", label: "Indicadores", icon: "gauge" },
   { id: "math", label: "Matemática", icon: "sigma" },

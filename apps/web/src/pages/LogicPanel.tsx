@@ -1,19 +1,18 @@
 // Lógica digital passo a passo: enunciado, tabela, formas canônicas, mapa de Karnaugh, equação mínima e circuito.
 // Três pontos de partida: equação, tabela-verdade ou o circuito montado no quadro.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildLogicCircuit,
   canonical,
-  circuitTable,
-  getDef,
   kmapLayout,
-  logicIO,
+  readCircuit,
   minimize,
   parseLogic,
   sopScene,
   verifyMin,
   type Cell,
+  type ReadCircuit,
   type KMap,
   type Minimized,
 } from "@ufci/engine";
@@ -112,6 +111,92 @@ function KMapSvg({ vars, vals, m, kind }: { vars: string[]; vals: Cell[]; m: Min
 
 function bitsOf(m: number, n: number) {
   return m.toString(2).padStart(n, "0");
+}
+
+function BoardCard({ circ, sel, onPick }: { circ: ReadCircuit; sel: number; onPick: (i: number) => void }) {
+  const cell = (v: 0 | 1 | 2) => (v === 2 ? "~" : String(v));
+  return (
+    <section className="card logic-step">
+      <h3>
+        <span className="step-n">C</span> Lido do circuito do quadro
+      </h3>
+      <p className="math-note">As portas viram equação. O que vem de fora da parte lógica (chave, clock, temporizador, flip-flop) vira uma letra:</p>
+      <div className="table-scroll math-table">
+        <table className="tt legend">
+          <thead>
+            <tr>
+              <th>Letra</th>
+              <th>Sinal</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {circ.leaves.map((l) => (
+              <tr key={l.signal}>
+                <td>
+                  <b>{l.name}</b>
+                </td>
+                <td className="left">{l.label}</td>
+                <td className="left">{l.kind}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h4 className="logic-h4">Equação de cada saída, como foi desenhada</h4>
+      <p className="math-note">Toque numa saída para fazer o passo a passo dela (tabela, mapa e equação mínima).</p>
+      <div className="out-list">
+        {circ.outputs.map((o, i) => (
+          <button key={o.signal + i} className={`out-item ${i === sel ? "on" : ""}`} onClick={() => onPick(i)}>
+            <span className="out-name">{o.label}</span>
+            <span className="logic-mono">= {o.structure}</span>
+          </button>
+        ))}
+      </div>
+      {circ.warnings.map((w) => (
+        <p key={w} className="math-note">
+          {w}
+        </p>
+      ))}
+      {circ.phases.length > 0 && (
+        <>
+          <h4 className="logic-h4">Fases no tempo</h4>
+          <p className="math-note">
+            Cada linha é um intervalo em que nenhum temporizador muda. O sinal ~ pisca durante a fase (clock). O tempo está em {circ.timeUnit}.
+            {circ.phasesCut ? " Mostrando as primeiras 60 fases." : ""}
+          </p>
+          <div className="table-scroll math-table">
+            <table className="tt phase">
+              <thead>
+                <tr>
+                  <th>de</th>
+                  <th>até</th>
+                  {circ.phaseCols.map((c, i) => (
+                    <th key={i} title={c}>
+                      {c.length > 12 ? c.slice(0, 11) + "…" : c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {circ.phases.map((p, i) => (
+                  <tr key={i}>
+                    <td>{+p.t0.toFixed(3)}</td>
+                    <td>{+p.t1.toFixed(3)}</td>
+                    {p.levels.map((v, j) => (
+                      <td key={j} className={`ph${v}`}>
+                        {cell(v)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  );
 }
 
 function Steps({ vars, vals, out, kind, setKind }: { vars: string[]; vals: Cell[]; out: string; kind: "sop" | "pos"; setKind: (k: "sop" | "pos") => void }) {
@@ -281,7 +366,7 @@ function Steps({ vars, vals, out, kind, setKind }: { vars: string[]; vals: Cell[
   );
 }
 
-export default function LogicPanel() {
+export default function LogicPanel({ active = true }: { active?: boolean }) {
   const project = useProject((s) => s.project);
   const [goal, setGoal] = useState("");
   const [nVars, setNVars] = useState(3);
@@ -291,7 +376,8 @@ export default function LogicPanel() {
   const [eqErr, setEqErr] = useState("");
   const [kind, setKind] = useState<"sop" | "pos">("sop");
   const [circErr, setCircErr] = useState("");
-  const [circInfo, setCircInfo] = useState<{ warnings: string[]; parts: { label: string; n: number }[] } | null>(null);
+  const [circ, setCirc] = useState<ReadCircuit | null>(null);
+  const [selOut, setSelOut] = useState(0);
   const [vars, setVars] = useState<string[]>(["A", "B", "C"]);
   const [started, setStarted] = useState(false);
 
@@ -315,27 +401,34 @@ export default function LogicPanel() {
     setStarted(true);
   };
 
-  const readCircuit = () => {
+  const pickOutput = (c: ReadCircuit, i: number) => {
+    const o = c.outputs[i];
+    if (!o) return;
+    setSelOut(i);
+    setCircErr(o.tooMany ? `A saída ${o.label} depende de mais de ${5} variáveis. O mapa vai até 5.` : "");
+    if (o.tooMany || o.vars.length === 0) return;
+    setVars(o.vars);
+    setNVars(o.vars.length);
+    setVals(o.vals);
+    setOut(o.label);
+    setStarted(true);
+  };
+
+  const readBoard = () => {
     setCircErr("");
-    setCircInfo(null);
     try {
-      const io = logicIO(project, (t) => getDef(t)?.label ?? t);
-      if (io.inputs.length < 2) return setCircErr("O quadro precisa de pelo menos 2 chaves de entrada (Digital > Chave).");
-      if (io.inputs.length > 5) return setCircErr("Use no máximo 5 chaves de entrada.");
-      const o = io.outputs.find((x) => x.led) ?? io.outputs[0];
-      if (!o) return setCircErr("Não achei saída. Ligue um LED à porta que dá o resultado.");
-      const t = circuitTable(project, io.inputs.map((i) => i.id), o.signal);
-      const names = io.inputs.map((i, k) => (/^[A-Za-z][0-9]*$/.test(i.label) ? i.label.toUpperCase() : NAMES[k]));
-      setVars(names.length === new Set(names).size ? names : NAMES.slice(0, names.length));
-      setNVars(names.length);
-      setVals(t);
-      setOut(/^[A-Za-z][A-Za-z0-9]*$/.test(o.label) ? o.label.toUpperCase() : "S");
-      setCircInfo({ warnings: io.warnings, parts: io.parts });
-      setStarted(true);
+      const c = readCircuit(project);
+      setCirc(c);
+      if (!c.outputs.length) return setCircErr(c.warnings[0] ?? "Não achei saída. Ligue um LED à porta que dá o resultado.");
+      pickOutput(c, 0);
     } catch (e) {
       setCircErr(e instanceof Error ? e.message : String(e));
     }
   };
+
+  useEffect(() => {
+    if (active && !started && !circ && project.components.some((c) => c.type === "dig.led")) readBoard();
+  }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = (m: number) => {
     setVals((v) => v.map((x, i) => (i === m ? (((x + 1) % 3) as Cell) : x)));
@@ -440,22 +533,16 @@ export default function LogicPanel() {
 
           <div className="logic-src">
             <b>C) Pelo circuito do quadro</b>
-            <p className="math-note">Usa as chaves de entrada e o LED de saída do projeto aberto. O programa liga cada combinação e anota o resultado.</p>
-            <button className="btn" onClick={readCircuit}>
+            <p className="math-note">Lê as portas do projeto aberto e monta a equação de cada LED. Chaves, clock, temporizadores e flip-flops entram como variáveis (A, B, C...).</p>
+            <button className="btn" onClick={readBoard}>
               Ler o circuito do quadro
             </button>
             {circErr && <p className="math-error">{circErr}</p>}
-            {circInfo && (
-              <div className="math-note">
-                {circInfo.parts.length > 0 && <p>Componentes lidos: {circInfo.parts.map((p) => `${p.n}× ${p.label}`).join(", ")}.</p>}
-                {circInfo.warnings.map((w) => (
-                  <p key={w}>{w}</p>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>
+
+      {circ && circ.outputs.length > 0 && <BoardCard circ={circ} sel={selOut} onPick={(i) => pickOutput(circ, i)} />}
 
       {hasData && (
         <>
@@ -464,7 +551,13 @@ export default function LogicPanel() {
               <b>Objetivo:</b> {goal.trim()}
             </p>
           )}
-          <Steps vars={vars} vals={vals} out={out} kind={kind} setKind={setKind} />
+          {vars.length >= 2 ? (
+            <Steps vars={vars} vals={vals} out={out} kind={kind} setKind={setKind} />
+          ) : (
+            <section className="card logic-step">
+              <p className="math-note">Esta saída depende de {vars.length === 1 ? `uma variável só (${vars[0]})` : "nenhuma variável"}. Não precisa de mapa: {out} = {circ?.outputs[selOut]?.structure}.</p>
+            </section>
+          )}
         </>
       )}
       {!hasData && <p className="math-note">Escolha uma das três formas acima para ver o passo a passo.</p>}

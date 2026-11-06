@@ -61,6 +61,20 @@ function toLatex(rep: MathReport, name: string): string {
   return out.join("\n");
 }
 
+function DigitalHint() {
+  const project = useProject((s) => s.project);
+  const digital = project.components.some((c) => c.type.startsWith("dig.") || c.type.startsWith("ic."));
+  if (!digital) return null;
+  return (
+    <p className="math-note digital-hint">
+      Este projeto tem blocos digitais. A matemática deles é a lógica: tabela-verdade, mapa de Karnaugh e equação.{" "}
+      <button className="link-btn" onClick={() => useUi.getState().setMathTab("logica")}>
+        Ver a lógica digital deste circuito
+      </button>
+    </p>
+  );
+}
+
 function AnalysePanel() {
   const project = useProject((s) => s.project);
   const [sel, setSel] = useState<{ input?: string; output?: string }>({});
@@ -221,10 +235,11 @@ export default function MathPage() {
           Lógica digital
         </button>
       </div>
+      {tab === "analise" && <DigitalHint />}
       {tab === "analise" && <AnalysePanel />}
       {tab === "frequencia" && <FreqPanel />}
       <div hidden={tab !== "logica"} className="logic-wrap">
-        <LogicPanel />
+        <LogicPanel active={tab === "logica"} />
       </div>
       <div hidden={tab !== "equacao"} className="synth-wrap">
         <SynthPanel />

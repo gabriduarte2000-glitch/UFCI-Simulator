@@ -3295,3 +3295,19 @@ th {
   .logic-sources { grid-template-columns: 1fr; }
   .seg.small { flex-wrap: wrap; }
 }
+.tt.legend td.left, .tt.phase td.left { text-align: left; }
+.tt.phase th { font-size: 0.75rem; max-width: 110px; }
+.tt.phase td { padding: 3px 8px; }
+.tt.phase td.ph1 { background: rgba(47, 179, 107, 0.2); font-weight: 700; }
+.tt.phase td.ph2 { background: rgba(227, 155, 28, 0.25); font-weight: 700; }
+.tt.phase td.ph0 { opacity: 0.6; }
+.out-list { display: flex; flex-direction: column; gap: 6px; }
+.out-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; text-align: left; padding: 8px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; min-height: 44px; }
+.out-item.on { border-color: var(--accent); background: rgba(47, 125, 246, 0.12); }
+.out-item .logic-mono { margin: 0; }
+.out-name { font-weight: 600; }
+
+.page-stack { min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.page-stack > .page { flex: 1; }
+.view-bar { padding: 10px 20px 0; }
+@media (max-width: 700px) { .view-bar { padding: 8px 12px 0; } }

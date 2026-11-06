@@ -10,7 +10,6 @@ import { RightDrawer } from "./components/RightDrawer";
 import { StatusBar } from "./components/StatusBar";
 import { Icon } from "./components/Icon";
 import { DashboardPage } from "./pages/DashboardPage";
-import { GraficosPage } from "./pages/GraficosPage";
 import { TabelasPage } from "./pages/TabelasPage";
 import { IndicadoresPage } from "./pages/IndicadoresPage";
 const MathPage = lazy(() => import("./pages/MathPage"));
@@ -74,7 +73,6 @@ export function App() {
           )}
         </div>
         {page === "dashboard" && <DashboardPage />}
-        {page === "graficos" && <GraficosPage />}
         {page === "tabelas" && <TabelasPage />}
         {page === "indicadores" && <IndicadoresPage />}
         {page === "math" && (

@@ -65,7 +65,7 @@ const FREQ: AssistAction = { type: "go", label: "Medir ganho e fase", page: "mat
 const EQUACAO: AssistAction = { type: "go", label: "Digitar uma equação", page: "math", tab: "equacao" };
 const CONTA: AssistAction = { type: "open_cloud", label: "Criar conta ou entrar" };
 
-const PAGE_NAMES: Record<string, string> = { montagem: "Montagem", dashboard: "Dashboard", graficos: "Gráficos", tabelas: "Tabelas", indicadores: "Indicadores", math: "Matemática" };
+const PAGE_NAMES: Record<string, string> = { montagem: "Montagem", dashboard: "Dashboard", graficos: "Dashboard (gráficos)", tabelas: "Tabelas", indicadores: "Indicadores", math: "Matemática" };
 
 const push = (m: ChatMsg) => useAssist.setState((s) => ({ messages: [...s.messages, m] }));
 const projectIsEmpty = () => useProject.getState().project.components.filter((c) => c.type !== "note.text").length === 0;
