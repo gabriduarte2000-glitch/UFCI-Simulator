@@ -53,3 +53,31 @@ describe("lógica sequencial", () => {
     expect(r.outFns[0].min.text).toBe("AB");
   });
 });
+
+import { readStateMachine } from "../src/index";
+describe("leitura de máquina de estados do quadro", () => {
+  for (const ex of SEQ_EXAMPLES)
+    for (const ff of ["D", "T", "JK"] as const)
+      it(`${ex.title} (${ff}): a tabela lida é a do projeto`, () => {
+        const spec: SeqSpec = { ...ex.spec, ff };
+        const r = designSeq(spec);
+        if (!r.ok) throw new Error();
+        const fsm = readStateMachine(buildSeqCircuit("t", spec, r as SeqResult));
+        expect(fsm.ok).toBe(true);
+        if (!fsm.ok) return;
+        expect(fsm.inputs.length).toBe(spec.inputs.length);
+        expect(fsm.ffKind).toBe(ff);
+        spec.next.forEach((row, s) => expect(fsm.states[s].next).toEqual(row));
+        expect(fsm.states.filter((s) => s.reachable).length).toBeLessThanOrEqual(spec.nStates);
+        spec.outputs.forEach((o) => {
+          const f = fsm.outputs.find((x) => x.label === o.name)!;
+          expect(f.moore).toBe(true);
+          o.byState.forEach((v, s) => expect(f.byState[s]).toBe(v));
+        });
+        expect(fsm.spec).not.toBeNull();
+      });
+  it("sem flip-flop dá erro claro", () => {
+    const r = readStateMachine({ schemaVersion: "1", meta: { name: "x" }, components: [], connections: [], simulation: { solver: "rk4", t0: 0, tf: 1, h: 0.1 } } as never);
+    expect(r.ok).toBe(false);
+  });
+});

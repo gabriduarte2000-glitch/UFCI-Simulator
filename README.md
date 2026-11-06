@@ -80,3 +80,7 @@ A aba também lê circuitos com portas, temporizadores e clock: cada LED vira um
 ## Matemática: lógica sequencial
 
 A aba "Lógica sequencial" projeta contadores e máquinas de estado: você escolhe estados, entradas e o tipo de flip-flop (D, T ou JK) e preenche o próximo estado de cada um. O programa mostra a tabela de excitação, um mapa de Karnaugh para cada entrada de flip-flop (com X nos códigos não usados), as equações finais e conferência de todas as transições. O botão "Montar este circuito no quadro" cria clock, flip-flops, portas e LEDs. Os testes simulam cada circuito montado e comparam a sequência de estados com a tabela.
+
+## Matemática: dois caminhos
+
+A página abre com duas escolhas. "Da conta para o circuito": sistema contínuo, lógica combinacional ou contador/máquina de estados. "Do circuito para a conta": equações do sistema, ganho e fase, lógica das portas ou máquina de estados lida do quadro. Cada tela diz onde está a resposta. A leitura de máquina de estados aceita flip-flops D, T e JK no mesmo clock, com portas e chaves de entrada, e mostra a tabela de estados, as saídas (Moore ou Mealy) e o diagrama. O botão "Abrir no projetista" leva a tabela para a aba de projeto.

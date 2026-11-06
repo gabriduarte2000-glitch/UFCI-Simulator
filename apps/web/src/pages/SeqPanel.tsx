@@ -1,6 +1,6 @@
 // Lógica sequencial passo a passo: tabela de estados, excitação dos flip-flops, Karnaugh, equações e circuito.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildSeqCircuit, designSeq, SEQ_EXAMPLES, type FFKind, type SeqFn, type SeqSpec } from "@ufci/engine";
 import { useProject } from "../store";
 import { useUi } from "../ui";
@@ -54,6 +54,13 @@ export default function SeqPanel() {
   const [spec, setSpec] = useState<SeqSpec>(defaultSpec());
   const [freq, setFreq] = useState("1");
   const res = useMemo(() => designSeq(spec), [spec]);
+  const imp = useUi((s) => s.seqImport);
+  useEffect(() => {
+    if (!imp) return;
+    setSpec(imp);
+    setGoal("Máquina lida do circuito do quadro. Ajuste os estados se quiser e refaça o projeto.");
+    useUi.getState().setSeqImport(null);
+  }, [imp]);
   const nIn = spec.inputs.length;
   const combos = 1 << nIn;
 

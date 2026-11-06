@@ -445,7 +445,7 @@ export function buildLogicCircuit(name: string, vars: string[], outs: { name: st
     const m = o.min;
     const y0 = row * 80;
     if (m.constant !== null) {
-      comps.push({ id: `k${oi}`, type: "dig.switch", label: `${o.name} = ${m.constant}`, params: { on: m.constant === 1 }, pos: [520, y0] });
+      comps.push({ id: `k${oi}`, type: "dig.switch", label: `${o.name} = ${m.constant} (fixo)`, params: { on: m.constant === 1 }, pos: [520, y0] });
       comps.push({ id: `led${oi}`, type: "dig.led", label: o.name, params: { color: "green" }, pos: [820, y0] });
       conns.push([`k${oi}`, "y", `led${oi}`, "a"]);
       row++;
@@ -542,7 +542,7 @@ export function circuitTable(ir: ProjectIR, inputIds: string[], signal: string):
 
 // ------------------------------------------------------------------------------------------------ equações lidas da estrutura do circuito
 
-type X = { t: "leaf"; key: string } | { t: "const"; v: 0 | 1 } | { t: "not"; a: X } | { t: "gate"; op: "and" | "or" | "nand" | "nor" | "xor" | "xnor"; args: X[] };
+export type X = { t: "leaf"; key: string } | { t: "const"; v: 0 | 1 } | { t: "not"; a: X } | { t: "gate"; op: "and" | "or" | "nand" | "nor" | "xor" | "xnor"; args: X[] };
 
 export interface Leaf {
   /** Letra usada nas equações (A, B, C...). */
@@ -587,7 +587,7 @@ export interface ReadCircuit {
 
 const GATE_OPS = new Set(["and", "or", "nand", "nor", "xor", "xnor"]);
 
-function evalX(x: X, a: Record<string, number>): number {
+export function evalX(x: X, a: Record<string, number>): number {
   switch (x.t) {
     case "leaf":
       return a[x.key] ?? 0;
@@ -605,14 +605,14 @@ function evalX(x: X, a: Record<string, number>): number {
   }
 }
 
-function leavesOf(x: X, out = new Set<string>()): Set<string> {
+export function leavesOf(x: X, out = new Set<string>()): Set<string> {
   if (x.t === "leaf") out.add(x.key);
   else if (x.t === "not") leavesOf(x.a, out);
   else if (x.t === "gate") x.args.forEach((y) => leavesOf(y, out));
   return out;
 }
 
-function showX(x: X, nm: (k: string) => string, prec = 0): string {
+export function showX(x: X, nm: (k: string) => string, prec = 0): string {
   const wrap = (s: string, p: number) => (p < prec ? `(${s})` : s);
   switch (x.t) {
     case "leaf":

@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { analyzeMath, type MathBlock, type MathReport } from "@ufci/engine";
 import { useProject } from "../store";
-import { useUi } from "../ui";
+import { useUi, type MathTab } from "../ui";
 import { Icon } from "../components/Icon";
 import { Tex } from "../components/Tex";
 import SynthPanel from "./SynthPanel";
 import FreqPanel from "./FreqPanel";
 import LogicPanel from "./LogicPanel";
 import SeqPanel from "./SeqPanel";
+import StatesPanel from "./StatesPanel";
 
 function Block({ b }: { b: MathBlock }) {
   switch (b.kind) {
@@ -66,12 +67,21 @@ function DigitalHint() {
   const project = useProject((s) => s.project);
   const digital = project.components.some((c) => c.type.startsWith("dig.") || c.type.startsWith("ic."));
   if (!digital) return null;
+  const seq = project.components.some((c) => /^dig\.(dff|tff|jkff)$/.test(c.type));
   return (
     <p className="math-note digital-hint">
-      Este projeto tem blocos digitais. A matemática deles é a lógica: tabela-verdade, mapa de Karnaugh e equação.{" "}
-      <button className="link-btn" onClick={() => useUi.getState().setMathTab("logica")}>
-        Ver a lógica digital deste circuito
+      Este projeto tem blocos digitais. A conta deles é a lógica.{" "}
+      <button className="link-btn" onClick={() => useUi.getState().setMathTab("logicaCirc")}>
+        Ver a lógica das portas
       </button>
+      {seq && (
+        <>
+          {" · "}
+          <button className="link-btn" onClick={() => useUi.getState().setMathTab("estados")}>
+            Ver a máquina de estados
+          </button>
+        </>
+      )}
     </p>
   );
 }
@@ -176,6 +186,26 @@ function AnalysePanel() {
 
       {report?.ok && (
         <>
+          {report.sections.some((x) => ["tf", "polos", "degrau"].includes(x.id)) && (
+            <div className="math-answer">
+              <b>Respostas principais:</b>
+              {report.sections
+                .filter((x) => ["tf", "polos", "degrau"].includes(x.id))
+                .map((x) => (
+                  <button
+                    key={x.id}
+                    className="link-btn"
+                    onClick={() => {
+                      setOpen({ ...open, [x.id]: true });
+                      document.getElementById(`math-${x.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  >
+                    {x.title}
+                  </button>
+                ))}
+              <span className="muted"> As outras seções mostram como se chega nelas.</span>
+            </div>
+          )}
           <nav className="math-toc" aria-label="Seções">
             {report.sections.map((s) => (
               <a
@@ -214,37 +244,171 @@ function AnalysePanel() {
   );
 }
 
+type Mode = "conta" | "circuito";
+interface Opt {
+  tab: MathTab;
+  title: string;
+  desc: string;
+  answer: string;
+}
+const MODES: Record<Mode, { title: string; sub: string; menu: MathTab; options: Opt[] }> = {
+  conta: {
+    title: "Da conta para o circuito",
+    sub: "Tenho a equação, a tabela ou o enunciado. Quero o circuito montado.",
+    menu: "menuConta",
+    options: [
+      { tab: "equacao", title: "Sistema contínuo", desc: "Digite a função de transferência H(s) ou as matrizes de estado. O programa monta o diagrama ou o circuito e confere.", answer: "O circuito montado no quadro e a conferência de G(s)." },
+      { tab: "logica", title: "Lógica combinacional", desc: "Parta da tabela-verdade ou da equação booleana. O programa reduz com Karnaugh e desenha as portas.", answer: "Equação final (passo 5) e o circuito de portas (passo 6)." },
+      { tab: "sequencial", title: "Contador ou máquina de estados", desc: "Descreva os estados e para onde cada um vai. O programa acha as equações dos flip-flops e monta o circuito.", answer: "Equações finais (passo 5) e o circuito com flip-flops (passo 6)." },
+    ],
+  },
+  circuito: {
+    title: "Do circuito para a conta",
+    sub: "Já montei no quadro. Quero ver a conta por trás dele.",
+    menu: "menuCircuito",
+    options: [
+      { tab: "analise", title: "Equações do sistema", desc: "Circuitos elétricos, mecânicos, térmicos e blocos de controle: equações, função de transferência e polos.", answer: "Seções Função de transferência e Polos, zeros e estabilidade. As outras mostram como se chega nelas." },
+      { tab: "frequencia", title: "Ganho e fase", desc: "Resposta em frequência (Bode) do circuito montado.", answer: "As curvas de ganho e fase e a tabela de pontos." },
+      { tab: "logicaCirc", title: "Lógica das portas", desc: "Lê as portas e os LEDs do quadro. Mostra a equação de cada saída, a tabela-verdade, o Karnaugh e a equação mínima.", answer: "Equação de cada saída, e a equação final de cada uma no passo 5." },
+      { tab: "estados", title: "Máquina de estados", desc: "Lê os flip-flops do quadro (contador ou máquina de estados). Mostra a tabela de estados e o diagrama.", answer: "A tabela de estados (passo 2) e o diagrama (passo 3)." },
+    ],
+  },
+};
+const modeOfTab = (t: MathTab): Mode | null => {
+  if (t === "inicio") return null;
+  if (t === "menuConta" || MODES.conta.options.some((o) => o.tab === t)) return "conta";
+  return "circuito";
+};
+
+function boardInfo(project: ReturnType<typeof useProject.getState>["project"]) {
+  const comps = project.components.filter((c) => c.type !== "note.text" && !c.type.startsWith("sink."));
+  const dig = comps.filter((c) => c.type.startsWith("dig.") || c.type.startsWith("ic."));
+  const ffs = comps.filter((c) => /^dig\.(dff|tff|jkff)$/.test(c.type));
+  const leds = comps.filter((c) => c.type === "dig.led");
+  const cont = comps.length - dig.length;
+  return { total: comps.length, dig: dig.length, ffs: ffs.length, leds: leds.length, cont };
+}
+
+function Landing() {
+  const project = useProject((s) => s.project);
+  const info = boardInfo(project);
+  const go = (t: MathTab) => useUi.getState().setMathTab(t);
+  return (
+    <div className="math-landing">
+      <p className="math-lead">O que você quer fazer?</p>
+      <div className="mode-grid">
+        <button className="mode-card" onClick={() => go("menuConta")}>
+          <span className="mode-n">1</span>
+          <b>{MODES.conta.title}</b>
+          <span>{MODES.conta.sub}</span>
+          <em>Sistema contínuo, lógica combinacional ou sequencial</em>
+        </button>
+        <button className="mode-card" onClick={() => go("menuCircuito")}>
+          <span className="mode-n">2</span>
+          <b>{MODES.circuito.title}</b>
+          <span>{MODES.circuito.sub}</span>
+          <em>
+            {info.total === 0
+              ? "O quadro está vazio. Monte um circuito ou abra uma situação antes."
+              : `No quadro agora: ${info.total} componentes${info.dig ? `, ${info.dig} digitais` : ""}${info.ffs ? `, ${info.ffs} flip-flop${info.ffs > 1 ? "s" : ""}` : ""}.`}
+          </em>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function recommended(tab: MathTab, project: ReturnType<typeof useProject.getState>["project"]): boolean {
+  const i = boardInfo(project);
+  if (tab === "analise" || tab === "frequencia") return i.cont > 0;
+  if (tab === "logicaCirc") return i.dig > 0 && i.leds > 0;
+  if (tab === "estados") return i.ffs > 0;
+  return false;
+}
+
+function Menu({ mode }: { mode: Mode }) {
+  const project = useProject((s) => s.project);
+  const m = MODES[mode];
+  return (
+    <div className="math-landing">
+      <p className="math-lead">
+        <b>{m.title}.</b> {m.sub} Escolha o tipo de problema:
+      </p>
+      <div className="opt-grid">
+        {m.options.map((o) => {
+          const rec = mode === "circuito" && recommended(o.tab, project);
+          return (
+            <button key={o.tab} className={`mode-card small ${rec ? "rec" : ""}`} onClick={() => useUi.getState().setMathTab(o.tab)}>
+              <b>{o.title}</b>
+              <span>{o.desc}</span>
+              {rec && <em>O quadro tem o que esta opção lê</em>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function MathPage() {
   const tab = useUi((s) => s.mathTab);
   const setTab = useUi((s) => s.setMathTab);
+  const mode = modeOfTab(tab);
+  const m = mode ? MODES[mode] : null;
+  const opt = m?.options.find((o) => o.tab === tab);
   return (
     <div className="page math-page">
       <div className="page-head">
         <h1>Matemática</h1>
       </div>
-      <div className="seg" role="tablist" aria-label="Sentido da conversão">
-        <button role="tab" aria-selected={tab === "analise"} className={tab === "analise" ? "on" : ""} onClick={() => setTab("analise")}>
-          Circuito para equação
-        </button>
-        <button role="tab" aria-selected={tab === "equacao"} className={tab === "equacao" ? "on" : ""} onClick={() => setTab("equacao")}>
-          Equação para circuito
-        </button>
-        <button role="tab" aria-selected={tab === "frequencia"} className={tab === "frequencia" ? "on" : ""} onClick={() => setTab("frequencia")}>
-          Ganho e fase
-        </button>
-        <button role="tab" aria-selected={tab === "logica"} className={tab === "logica" ? "on" : ""} onClick={() => setTab("logica")}>
-          Lógica digital
-        </button>
-        <button role="tab" aria-selected={tab === "sequencial"} className={tab === "sequencial" ? "on" : ""} onClick={() => setTab("sequencial")}>
-          Lógica sequencial
-        </button>
-      </div>
+      {tab !== "inicio" && m && (
+        <nav className="math-crumbs" aria-label="Onde você está">
+          <button className="link-btn" onClick={() => setTab("inicio")}>
+            Início
+          </button>
+          <span>›</span>
+          {opt ? (
+            <button className="link-btn" onClick={() => setTab(m.menu)}>
+              {m.title}
+            </button>
+          ) : (
+            <b>{m.title}</b>
+          )}
+          {opt && (
+            <>
+              <span>›</span>
+              <b>{opt.title}</b>
+            </>
+          )}
+        </nav>
+      )}
+      {opt && m && (
+        <>
+          <div className="seg" role="tablist" aria-label="Tipo de problema">
+            {m.options.map((o) => (
+              <button key={o.tab} role="tab" aria-selected={tab === o.tab} className={tab === o.tab ? "on" : ""} onClick={() => setTab(o.tab)}>
+                {o.title}
+              </button>
+            ))}
+          </div>
+          <p className="math-answer-line">
+            <b>Onde está a resposta:</b> {opt.answer}
+          </p>
+        </>
+      )}
+      {tab === "inicio" && <Landing />}
+      {tab === "menuConta" && <Menu mode="conta" />}
+      {tab === "menuCircuito" && <Menu mode="circuito" />}
       {tab === "analise" && <DigitalHint />}
       {tab === "analise" && <AnalysePanel />}
       {tab === "frequencia" && <FreqPanel />}
       {tab === "sequencial" && <SeqPanel />}
+      {tab === "estados" && <StatesPanel active />}
       <div hidden={tab !== "logica"} className="logic-wrap">
-        <LogicPanel active={tab === "logica"} />
+        <LogicPanel mode="design" />
+      </div>
+      <div hidden={tab !== "logicaCirc"} className="logic-wrap">
+        <LogicPanel mode="board" active={tab === "logicaCirc"} />
       </div>
       <div hidden={tab !== "equacao"} className="synth-wrap">
         <SynthPanel />

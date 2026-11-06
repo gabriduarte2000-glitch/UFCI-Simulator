@@ -29,3 +29,4 @@ import "./ics/msi";
 import "./ics/mono";
 export * from "./logic";
 export * from "./seq";
+export * from "./fsm";

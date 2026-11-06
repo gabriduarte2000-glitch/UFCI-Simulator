@@ -165,7 +165,7 @@ export function buildSeqCircuit(name: string, spec: SeqSpec, r: SeqResult, freq 
     const y0 = row * 70;
     if (m.constant !== null) {
       const id = `k_${tag}`;
-      comps.push({ id, type: "dig.switch", label: `${f.label} = ${m.constant}`, params: { on: m.constant === 1 }, pos: [520, y0] });
+      comps.push({ id, type: "dig.switch", label: `${f.label} = ${m.constant} (fixo)`, params: { on: m.constant === 1 }, pos: [520, y0] });
       row++;
       return [id, "y"];
     }

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
+import type { SeqSpec } from "@ufci/engine";
 
 /** Telas estreitas (celular, tablet em pé): painéis viram folhas e a navegação vai para baixo. */
 export const COMPACT_QUERY = "(max-width: 900px)";
@@ -20,7 +21,17 @@ export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicado
 /** Como os sinais escolhidos se distribuem nos gráficos. */
 export type DashView = "painel" | "graficos";
 export type ChartMode = "unit" | "each" | "all";
-export type MathTab = "analise" | "equacao" | "frequencia" | "logica" | "sequencial";
+export type MathTab =
+  | "inicio"
+  | "menuConta"
+  | "menuCircuito"
+  | "equacao"
+  | "logica"
+  | "sequencial"
+  | "analise"
+  | "frequencia"
+  | "logicaCirc"
+  | "estados";
 export type RightTab = "props" | "sim";
 
 interface Ui {
@@ -36,6 +47,8 @@ interface Ui {
   dashView: DashView;
   setDashView(v: DashView): void;
   mathTab: MathTab;
+  seqImport: SeqSpec | null;
+  setSeqImport(s: SeqSpec | null): void;
   cloudOpen: boolean;
   datasheet: string | null;
   setDatasheet(part: string | null): void;
@@ -64,7 +77,9 @@ export const useUi = create<Ui>((set) => ({
   tool: "select",
   chartSignal: [],
   chartMode: "unit",
-  mathTab: "analise",
+  mathTab: "inicio",
+  seqImport: null,
+  setSeqImport: (seqImport) => set({ seqImport }),
   cloudOpen: false,
   datasheet: null,
   setDatasheet: (datasheet) => set({ datasheet }),

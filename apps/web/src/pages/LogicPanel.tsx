@@ -120,7 +120,7 @@ function BoardCard({ circ, sel, onPick, dc, onDc }: { circ: ReadCircuit; sel: nu
   return (
     <section className="card logic-step">
       <h3>
-        <span className="step-n">C</span> Lido do circuito do quadro
+        <span className="step-n">1</span> Lido do circuito do quadro
       </h3>
       <p className="math-note">As portas viram equação. O que vem de fora da parte lógica (chave, clock, temporizador, flip-flop) vira uma letra:</p>
       <div className="table-scroll math-table">
@@ -377,7 +377,7 @@ function Steps({ vars, vals, out, kind, setKind }: { vars: string[]; vals: Cell[
   );
 }
 
-export default function LogicPanel({ active = true }: { active?: boolean }) {
+export default function LogicPanel({ active = true, mode = "design" }: { active?: boolean; mode?: "design" | "board" }) {
   const project = useProject((s) => s.project);
   const [goal, setGoal] = useState("");
   const [nVars, setNVars] = useState(3);
@@ -439,7 +439,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
   };
 
   useEffect(() => {
-    if (active && !started && !circ && project.components.some((c) => c.type === "dig.led")) readBoard();
+    if (mode === "board" && active && !started && !circ && project.components.some((c) => c.type === "dig.led")) readBoard();
   }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = (m: number) => {
@@ -457,11 +457,24 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
 
   return (
     <div className="logic">
-      <p className="math-lead">
-        Aqui a matemática do circuito digital é a lógica: enunciado, tabela-verdade, mapa de Karnaugh, equação mínima e circuito. Comece pelo que você tem: o enunciado e a tabela, uma equação, ou o circuito já
-        montado no quadro.
-      </p>
+      {mode === "design" ? (
+        <p className="math-lead">
+          Você tem o enunciado. O programa monta a tabela-verdade, faz o mapa de Karnaugh, acha a equação mínima e desenha o circuito. Comece pela tabela ou pela equação.
+        </p>
+      ) : (
+        <section className="card logic-step">
+          <p className="math-lead">
+            Lê as portas do circuito que está no quadro e mostra a conta por trás: equação de cada LED, tabela-verdade, Karnaugh e equação mínima. Chaves, clock, temporizadores e flip-flops entram como letras (A, B, C...).
+          </p>
+          <button className="btn primary" onClick={readBoard}>
+            Ler o circuito do quadro de novo
+          </button>
+          {circErr && <p className="math-error">{circErr}</p>}
+          {!circ && !circErr && <p className="math-note">Nada lido ainda. O circuito precisa de ao menos um LED ligado à saída lógica.</p>}
+        </section>
+      )}
 
+      {mode === "design" && (
       <section className="card logic-step">
         <h3>
           <span className="step-n">1</span> Enunciado e entradas
@@ -490,7 +503,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
 
         <div className="logic-sources">
           <div className="logic-src">
-            <b>A) Pela tabela</b>
+            <b>Pela tabela</b>
             <p className="math-note">Toque nas células da coluna {out} da tabela abaixo (0, 1 ou X). X = tanto faz (combinação que nunca ocorre).</p>
             <div className="table-scroll math-table">
               <table className="tt edit">
@@ -525,7 +538,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
           </div>
 
           <div className="logic-src">
-            <b>B) Pela equação</b>
+            <b>Pela equação</b>
             <p className="math-note">
               Use letras, apóstrofo (A') ou ! para NÃO, + para OU, · ou nada entre as letras para E, ^ para OU exclusivo. Exemplos: A'B + AC · (A+B)(C+D')
             </p>
@@ -543,22 +556,15 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
             </div>
           </div>
 
-          <div className="logic-src">
-            <b>C) Pelo circuito do quadro</b>
-            <p className="math-note">Lê as portas do projeto aberto e monta a equação de cada LED. Chaves, clock, temporizadores e flip-flops entram como variáveis (A, B, C...).</p>
-            <button className="btn" onClick={readBoard}>
-              Ler o circuito do quadro
-            </button>
-            {circErr && <p className="math-error">{circErr}</p>}
-          </div>
         </div>
       </section>
+      )}
 
-      {circ && circ.outputs.length > 0 && <BoardCard circ={circ} sel={selOut} onPick={(i) => pickOutput(circ, i)} dc={useDc} onDc={(v) => (setUseDc(v), pickOutput(circ, selOut, v))} />}
+      {mode === "board" && circ && circ.outputs.length > 0 && <BoardCard circ={circ} sel={selOut} onPick={(i) => pickOutput(circ, i)} dc={useDc} onDc={(v) => (setUseDc(v), pickOutput(circ, selOut, v))} />}
 
       {hasData && (
         <>
-          {goal.trim() && (
+          {mode === "design" && goal.trim() && (
             <p className="logic-goal">
               <b>Objetivo:</b> {goal.trim()}
             </p>
@@ -572,7 +578,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
           )}
         </>
       )}
-      {!hasData && <p className="math-note">Escolha uma das três formas acima para ver o passo a passo.</p>}
+      {!hasData && mode === "design" && <p className="math-note">Escolha a tabela ou a equação acima para ver o passo a passo.</p>}
     </div>
   );
 }
