@@ -32,7 +32,7 @@ const EXAMPLES: { title: string; vars: number; text: string; goal: string }[] = 
   { title: "Paridade", vars: 3, text: "S = A ^ B ^ C", goal: "Saída 1 quando o número de entradas em 1 é ímpar. Não reduz: o mapa fica em xadrez." },
 ];
 
-function KMapSvg({ vars, vals, m, kind }: { vars: string[]; vals: Cell[]; m: Minimized; kind: "sop" | "pos" }) {
+export function KMapSvg({ vars, vals, m, kind }: { vars: string[]; vals: Cell[]; m: Minimized; kind: "sop" | "pos" }) {
   const k: KMap = useMemo(() => kmapLayout(vars), [vars]);
   const cs = 46;
   const lx = 64;

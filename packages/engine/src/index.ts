@@ -28,3 +28,4 @@ import "./ics/regs";
 import "./ics/msi";
 import "./ics/mono";
 export * from "./logic";
+export * from "./seq";

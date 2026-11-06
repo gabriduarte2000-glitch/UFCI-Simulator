@@ -20,7 +20,7 @@ export type Page = "montagem" | "dashboard" | "graficos" | "tabelas" | "indicado
 /** Como os sinais escolhidos se distribuem nos gráficos. */
 export type DashView = "painel" | "graficos";
 export type ChartMode = "unit" | "each" | "all";
-export type MathTab = "analise" | "equacao" | "frequencia" | "logica";
+export type MathTab = "analise" | "equacao" | "frequencia" | "logica" | "sequencial";
 export type RightTab = "props" | "sim";
 
 interface Ui {
