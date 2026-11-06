@@ -27,3 +27,4 @@ export type { Datasheet, Pin as ICPin, Scene as ICScene, Item as ICItem, FnTable
 import "./ics/regs";
 import "./ics/msi";
 import "./ics/mono";
+export * from "./logic";

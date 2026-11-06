@@ -70,3 +70,7 @@ python3 tools/reference-python/pid_loop.py
 ## Valores de exemplo
 
 Os valores padrão dos componentes são ilustrativos e aparecem marcados assim no painel de propriedades. Cada parâmetro pode ser marcado como estimado ou documentado.
+
+## Matemática: lógica digital
+
+A aba "Lógica digital" da página Matemática faz o passo a passo do projeto combinacional: enunciado, tabela-verdade (editável, com X), formas canônicas (soma de mintermos e produto de maxtermos), mapa de Karnaugh de 2 a 5 variáveis com os grupos coloridos, leitura de cada grupo, equação mínima (soma de produtos ou produto de somas), conferência linha por linha e o circuito de portas. Pode começar pela tabela, por uma equação ou pelo circuito montado no quadro (o programa liga cada combinação das chaves e lê o LED). O botão "Montar este circuito no quadro" faz o caminho inverso.

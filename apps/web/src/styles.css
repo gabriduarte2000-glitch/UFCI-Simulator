@@ -3250,3 +3250,48 @@ th {
 .examples .lib-fold {
   margin: 0;
 }
+
+/* ---------- Matemática: lógica digital ---------- */
+.logic { display: flex; flex-direction: column; gap: 14px; }
+.logic-step { padding: 14px 16px; }
+.logic-step h3 { margin: 0 0 8px; display: flex; align-items: center; gap: 8px; font-size: 1.02rem; }
+.step-n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 0.8rem; flex: none; }
+.logic-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; min-width: 0; }
+.logic-lbl textarea, .logic-lbl input, .logic-lbl select, .logic-eq { width: 100%; box-sizing: border-box; font: inherit; }
+.logic-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.logic-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start; }
+.logic-src { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.logic-eq { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1rem; padding: 8px 10px; }
+.logic-ex { display: flex; flex-wrap: wrap; gap: 6px; }
+.logic-mono { font-family: ui-monospace, Menlo, Consolas, monospace; margin: 4px 0 10px; overflow-wrap: anywhere; }
+.logic-goal { margin: 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: rgba(47, 125, 246, 0.08); border-radius: 6px; }
+.logic-h4 { margin: 14px 0 4px; font-size: 0.95rem; }
+.logic-actions { margin-top: 10px; }
+.logic .ok { color: #2fb36b; }
+.logic .bad { color: #e5484d; }
+.tt { border-collapse: collapse; width: auto; min-width: 0; }
+.tt th, .tt td { border: 1px solid var(--line); padding: 4px 10px; text-align: center; }
+.tt tr.r1 td { background: rgba(47, 179, 107, 0.1); }
+.tt tr.rx td { background: rgba(227, 155, 28, 0.12); }
+.tt-cell { min-width: 44px; min-height: 36px; font: inherit; font-weight: 700; border-radius: 8px; border: 1px solid var(--line-2); background: transparent; color: inherit; cursor: pointer; }
+.tt-cell.v1 { background: rgba(47, 179, 107, 0.2); }
+.tt-cell.v2 { background: rgba(227, 155, 28, 0.25); }
+.kmap-wrap { overflow-x: auto; margin: 8px 0; }
+.kmap { width: 100%; max-width: 560px; height: auto; display: block; }
+.km-cell { fill: none; stroke: var(--line-2); stroke-width: 1.2; }
+.km-head, .km-corner, .km-plane { fill: var(--muted); font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.km-idx { fill: var(--muted); font-size: 9px; }
+.km-val { font-size: 18px; font-weight: 700; fill: currentColor; }
+.km-val.v0 { opacity: 0.55; }
+.km-val.v2 { fill: #e39b1c; }
+.group-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.group-list li { border-left: 4px solid; padding: 6px 10px; background: rgba(127, 140, 160, 0.07); border-radius: 0 8px 8px 0; }
+.g-why { font-size: 0.88rem; color: var(--muted); margin: 2px 0; }
+.g-res { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.scene-wrap { overflow-x: auto; }
+.scene-wrap svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) {
+  .logic-step { padding: 12px; }
+  .logic-sources { grid-template-columns: 1fr; }
+  .seg.small { flex-wrap: wrap; }
+}

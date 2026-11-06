@@ -8,6 +8,7 @@ import { Icon } from "../components/Icon";
 import { Tex } from "../components/Tex";
 import SynthPanel from "./SynthPanel";
 import FreqPanel from "./FreqPanel";
+import LogicPanel from "./LogicPanel";
 
 function Block({ b }: { b: MathBlock }) {
   switch (b.kind) {
@@ -216,9 +217,15 @@ export default function MathPage() {
         <button role="tab" aria-selected={tab === "frequencia"} className={tab === "frequencia" ? "on" : ""} onClick={() => setTab("frequencia")}>
           Ganho e fase
         </button>
+        <button role="tab" aria-selected={tab === "logica"} className={tab === "logica" ? "on" : ""} onClick={() => setTab("logica")}>
+          Lógica digital
+        </button>
       </div>
       {tab === "analise" && <AnalysePanel />}
       {tab === "frequencia" && <FreqPanel />}
+      <div hidden={tab !== "logica"} className="logic-wrap">
+        <LogicPanel />
+      </div>
       <div hidden={tab !== "equacao"} className="synth-wrap">
         <SynthPanel />
       </div>
