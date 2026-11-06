@@ -113,7 +113,9 @@ function bitsOf(m: number, n: number) {
   return m.toString(2).padStart(n, "0");
 }
 
-function BoardCard({ circ, sel, onPick }: { circ: ReadCircuit; sel: number; onPick: (i: number) => void }) {
+function BoardCard({ circ, sel, onPick, dc, onDc }: { circ: ReadCircuit; sel: number; onPick: (i: number) => void; dc: boolean; onDc: (v: boolean) => void }) {
+  const cur = circ.outputs[sel];
+  const nUnseen = cur?.observed ? cur.observed.filter((x) => !x).length : 0;
   const cell = (v: 0 | 1 | 2) => (v === 2 ? "~" : String(v));
   return (
     <section className="card logic-step">
@@ -153,6 +155,15 @@ function BoardCard({ circ, sel, onPick }: { circ: ReadCircuit; sel: number; onPi
           </button>
         ))}
       </div>
+      {cur?.observed && nUnseen > 0 && (
+        <label className="check dc-check">
+          <input type="checkbox" checked={dc} onChange={(e) => onDc(e.target.checked)} />
+          <span>
+            Usar X nas {nUnseen} combinaç{nUnseen === 1 ? "ão" : "ões"} de {cur.vars.join("")} que nunca aparece{nUnseen === 1 ? "" : "m"} na simulação. Isso simplifica a equação, mas só vale se os temporizadores continuarem em cadeia como estão.
+          </span>
+        </label>
+      )}
+      {cur && !cur.observed && !cur.tooMany && cur.vars.length > 0 && <p className="math-note">Esta saída depende de chave de entrada, então todas as combinações podem ocorrer e não uso X.</p>}
       {circ.warnings.map((w) => (
         <p key={w} className="math-note">
           {w}
@@ -378,6 +389,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
   const [circErr, setCircErr] = useState("");
   const [circ, setCirc] = useState<ReadCircuit | null>(null);
   const [selOut, setSelOut] = useState(0);
+  const [useDc, setUseDc] = useState(false);
   const [vars, setVars] = useState<string[]>(["A", "B", "C"]);
   const [started, setStarted] = useState(false);
 
@@ -401,7 +413,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
     setStarted(true);
   };
 
-  const pickOutput = (c: ReadCircuit, i: number) => {
+  const pickOutput = (c: ReadCircuit, i: number, dc = useDc) => {
     const o = c.outputs[i];
     if (!o) return;
     setSelOut(i);
@@ -409,7 +421,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
     if (o.tooMany || o.vars.length === 0) return;
     setVars(o.vars);
     setNVars(o.vars.length);
-    setVals(o.vals);
+    setVals(dc && o.observed ? (o.vals.map((v, m) => (o.observed![m] ? v : 2)) as Cell[]) : o.vals);
     setOut(o.label);
     setStarted(true);
   };
@@ -542,7 +554,7 @@ export default function LogicPanel({ active = true }: { active?: boolean }) {
         </div>
       </section>
 
-      {circ && circ.outputs.length > 0 && <BoardCard circ={circ} sel={selOut} onPick={(i) => pickOutput(circ, i)} />}
+      {circ && circ.outputs.length > 0 && <BoardCard circ={circ} sel={selOut} onPick={(i) => pickOutput(circ, i)} dc={useDc} onDc={(v) => (setUseDc(v), pickOutput(circ, selOut, v))} />}
 
       {hasData && (
         <>

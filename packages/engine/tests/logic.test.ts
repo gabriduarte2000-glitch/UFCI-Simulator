@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseLogic, minimize, verifyMin, canonical, kmapLayout, sopScene, buildLogicCircuit, logicIO, circuitTable, Simulation } from "../src/index";
+import { type Cell, parseLogic, minimize, verifyMin, canonical, kmapLayout, sopScene, buildLogicCircuit, logicIO, circuitTable, Simulation } from "../src/index";
 
 describe("lógica digital", () => {
   it("lê equação e monta tabela", () => {
@@ -76,5 +76,18 @@ describe("leitura do circuito com temporizadores", () => {
     expect(r.phases.length).toBeGreaterThanOrEqual(5);
     expect(r.phases.length).toBeLessThan(15);
     expect(r.phases[0].t0).toBe(0);
+  });
+});
+
+describe("combinações que não ocorrem", () => {
+  it("usar X simplifica e continua conferindo", () => {
+    const r = readCircuit(SITUATIONS.find((x) => x.id.includes("ladder"))!.make());
+    const o = r.outputs.find((x) => x.label.startsWith("Pedestres: vermelho"))!;
+    expect(o.observed).not.toBeNull();
+    const withX = o.vals.map((v, m) => (o.observed![m] ? v : 2)) as Cell[];
+    const a = minimize(o.vars, o.vals), b = minimize(o.vars, withX);
+    expect(verifyMin(o.vars, withX, b).ok).toBe(true);
+    expect(b.literalCount).toBeLessThanOrEqual(a.literalCount);
+    expect(b.literalCount).toBeLessThan(a.literalCount);
   });
 });

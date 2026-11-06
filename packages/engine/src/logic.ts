@@ -563,6 +563,8 @@ export interface ReadOutput {
   vars: string[];
   vals: Cell[];
   tooMany: boolean;
+  /** Por linha da tabela: a combinação aparece na simulação? null quando não dá para afirmar (há chave de entrada na função). */
+  observed: boolean[] | null;
 }
 
 export interface PhaseRow {
@@ -703,7 +705,7 @@ export function readCircuit(ir: ProjectIR): ReadCircuit {
         sup.forEach((k, i) => (a[k] = bit(m, sup.length, i)));
         vals.push(evalX(o.x, a) as Cell);
       }
-    return { label: o.label, signal: o.signal, structure: showX(o.x, nameOf), vars: sup.map(nameOf), vals, tooMany };
+    return { label: o.label, signal: o.signal, structure: showX(o.x, nameOf), vars: sup.map(nameOf), vals, tooMany, observed: null };
   });
 
   if (leaves.some((l) => l.kind === "memória" || l.kind === "clock")) warnings.push("Temporizadores, clock e flip-flops entram como variáveis: a equação vale para a parte combinacional entre eles. A tabela de fases abaixo mostra o que acontece no tempo.");
@@ -744,6 +746,21 @@ export function readCircuit(ir: ProjectIR): ReadCircuit {
         if (tEnd - tv[start] > 1e-9) flush(i - 1, tEnd);
         start = i;
       }
+    }
+    // Combinações que aparecem durante a simulação (só vale quando nenhuma chave de entrada manda na saída).
+    for (const o of outputs) {
+      if (o.tooMany || o.vars.length === 0) continue;
+      const ls = o.vars.map((n) => leaves.find((l) => l.name === n)!);
+      const js = ls.map((l) => idx(l.signal));
+      if (ls.some((l) => l.kind === "chave") || js.some((j) => j < 0)) continue;
+      const cols2 = js.map((j) => sim.series.colView(j));
+      const seen = new Array<boolean>(1 << ls.length).fill(false);
+      for (let i = 0; i < tv.length; i++) {
+        let m = 0;
+        cols2.forEach((col) => (m = (m << 1) | (col[i] >= 0.5 ? 1 : 0)));
+        seen[m] = true;
+      }
+      o.observed = seen;
     }
     if (phases.length > 60) {
       phases = phases.slice(0, 60);
