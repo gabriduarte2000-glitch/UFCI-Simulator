@@ -84,6 +84,13 @@ export function Library() {
 
   const expandAll = () => setOpen(Object.fromEntries([...GROUPS.map((g) => [g.id, true]), ...CATEGORIES.map((c) => ["cat:" + c.id, true])]));
   const collapseAll = () => setOpen({});
+  const expandSits = () =>
+    setOpen({
+      ...open,
+      ...Object.fromEntries(SITUATION_GROUPS.map((g) => ["sg:" + g.id, true])),
+      ...Object.fromEntries(SITUATIONS.map((x) => [`sf:${x.group}/${x.folder ?? "Outros"}`, true])),
+    });
+  const collapseSits = () => setOpen(Object.fromEntries(Object.entries(open).filter(([k]) => !k.startsWith("sg:") && !k.startsWith("sf:"))));
 
   const searching = q.trim().length > 0;
   const result = useMemo(() => (searching && tab === "comp" ? searchComponents(q) : null), [q, searching, tab]);
@@ -131,7 +138,7 @@ export function Library() {
   const groupLabel = (id?: GroupId) => GROUPS.find((g) => g.id === id)?.label ?? "";
 
   const needle = norm(q.trim());
-  const sits = SITUATIONS.filter((x) => !needle || norm(`${x.title} ${x.description} ${x.explore}`).includes(needle));
+  const sits = SITUATIONS.filter((x) => !needle || norm(`${x.title} ${x.description} ${x.explore} ${x.folder ?? ""}`).includes(needle));
 
   return (
     <aside className="library" aria-label="Biblioteca de componentes">
@@ -289,29 +296,69 @@ export function Library() {
         </>
       ) : (
         <div className="lib-scroll examples">
+          {!searching && (
+            <div className="lib-fold" role="group" aria-label="Abrir ou fechar todas as pastas">
+              <button onClick={expandSits} title="Abrir todas as pastas" aria-label="Abrir todas as pastas">
+                <Icon name="chevron" size={13} /> abrir tudo
+              </button>
+              <button onClick={collapseSits} title="Fechar todas as pastas" aria-label="Fechar todas as pastas">
+                <Icon name="chevronUp" size={13} /> fechar tudo
+              </button>
+            </div>
+          )}
           {sits.length === 0 && <div className="lib-empty"><strong>Nenhuma situação com “{q.trim()}”.</strong></div>}
           {SITUATION_GROUPS.map((g) => {
             const list = sits.filter((x) => x.group === g.id);
             if (!list.length) return null;
+            const gKey = "sg:" + g.id;
+            const gOpen = searching || !!open[gKey];
+            const folders = [...new Set(list.map((x) => x.folder ?? "Outros"))];
             return (
-              <section key={g.id}>
-                <div className="cat-head static">
-                  <span>{g.label}</span>
-                </div>
-                {list.map((x) => (
-                  <button
-                    key={x.id}
-                    className="example-card"
-                    onClick={() => {
-                      loadSituation(x);
-                      if (isCompact()) setLeftOpen(false);
-                    }}
-                  >
-                    <strong>{x.title}</strong>
-                    <span>{x.description}</span>
-                    <em>Explore: {x.explore}</em>
-                  </button>
-                ))}
+              <section key={g.id} className={`lib-block${gOpen ? " open" : ""}`}>
+                <button className="lib-block-head" aria-expanded={gOpen} onClick={() => setOpen({ ...open, [gKey]: !open[gKey] })}>
+                  <span className="lib-block-title">
+                    <strong>{g.label}</strong>
+                    <small>{folders.length} {folders.length === 1 ? "pasta" : "pastas"}</small>
+                  </span>
+                  <span className="lib-count">{list.length}</span>
+                  <Icon name={gOpen ? "chevronUp" : "chevron"} size={16} />
+                </button>
+                {gOpen && (
+                  <div className="lib-block-body">
+                    {folders.map((f) => {
+                      const fKey = `sf:${g.id}/${f}`;
+                      const fOpen = searching || !!open[fKey];
+                      const items = list.filter((x) => (x.folder ?? "Outros") === f);
+                      return (
+                        <Fragment key={f}>
+                          <button className="cat-head" aria-expanded={fOpen} onClick={() => setOpen({ ...open, [fKey]: !open[fKey] })}>
+                            <span>
+                              {f} <i>{items.length}</i>
+                            </span>
+                            <Icon name={fOpen ? "chevronUp" : "chevron"} size={14} />
+                          </button>
+                          {fOpen &&
+                            items.map((x) => (
+                              <button
+                                key={x.id}
+                                className="example-card"
+                                onClick={() => {
+                                  loadSituation(x);
+                                  if (isCompact()) setLeftOpen(false);
+                                }}
+                              >
+                                <strong>
+                                  <Mark text={x.title} q={q} />
+                                </strong>
+                                <span>{x.description}</span>
+                                <em>Explore: {x.explore}</em>
+                              </button>
+                            ))}
+                        </Fragment>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
             );
           })}

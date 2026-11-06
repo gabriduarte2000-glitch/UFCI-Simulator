@@ -7,6 +7,7 @@ import { rainTreatment } from "./situations-tcc";
 import { chirpResonance, digitalPid, noisyFilter, notchDemo, relayOven } from "./situations-ctrl";
 import { commonEmitter, counterDisplay, dacStaircase, fullAdderGates, halfWaveRectifier, invertingAmp, mosfetSwitch, norLatch, thermostat, timer555Astable, zenerRegulator } from "./situations-semi";
 import { fridgeCompressor, trafficLadder, trafficLight } from "./situations-ics";
+import * as more from "./situations-more";
 import type { ProjectIR } from "./types";
 
 export type SituationGroup = "control" | "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
@@ -18,6 +19,8 @@ export interface Situation {
   description: string;
   /** O que o estudante pode explorar. */
   explore: string;
+  /** Subpasta: o tipo de projeto. */
+  folder?: string;
   make: () => ProjectIR;
 }
 
@@ -249,7 +252,7 @@ function queue(): ProjectIR {
   );
 }
 
-export const SITUATIONS: Situation[] = [
+const BASE: Situation[] = [
   { id: "msd", group: "mech", title: "Massa, mola e amortecedor", description: "A força em degrau empurra a massa, presa a uma mola e a um amortecedor.", explore: "Aumente o amortecimento c até 20 (crítico) e veja a oscilação sumir. A posição final é F/k.", make: massSpringDamper },
   { id: "quarter-car", group: "mech", title: "Suspensão de um quarto de carro", description: "Pneu, roda, mola, amortecedor e chassi passando por um degrau de 10 cm na pista.", explore: "Reduza o amortecedor e veja o chassi balançar mais.", make: quarterCar },
   { id: "flex-shaft", group: "mech", title: "Eixo flexível com dois volantes", description: "Torque em degrau no volante 1, transmitido por um eixo torcional ao volante 2.", explore: "Reduza o amortecimento do eixo e veja as duas velocidades oscilarem em oposição.", make: flexibleShaft },
@@ -288,6 +291,45 @@ export const SITUATIONS: Situation[] = [
   { id: "inventory", group: "business", title: "Controle de estoque", description: "A produção demora 7 dias para chegar ao estoque. A demanda sobe no dia 30.", explore: "Aumente o ganho e veja o estoque oscilar (efeito chicote).", make: inventory },
   { id: "queue", group: "business", title: "Fila de atendimento", description: "O controlador ajusta o número de atendentes conforme o tamanho da fila.", explore: "Aumente as chegadas e veja a equipe crescer com atraso.", make: queue },
 ];
+
+const FOLDER_OF: Record<string, string> = {
+  "pid-loop": "Malhas de controle", "digital-pid": "Malhas de controle", "first-order": "Respostas de sistemas",
+  "noisy-filter": "Filtros e sinais", notch: "Filtros e sinais", chirp: "Filtros e sinais", "relay-oven": "Controle liga-desliga",
+  msd: "Massa, mola e amortecedor", "quarter-car": "Massa, mola e amortecedor", "flex-shaft": "Rotação",
+  rlc: "Circuitos RC e RLC", "rc-filters": "Circuitos RC e RLC",
+  "dc-motor": "Motores", servo: "Motores", "geared-motor": "Motores",
+  rectifier: "Fontes e retificação", zener: "Fontes e retificação", "ce-amp": "Amplificadores", "inv-amp": "Amplificadores", "mosfet-led": "Chaveamento",
+  timer555: "Osciladores e temporização", "counter-disp": "Contadores e displays", "dac-stair": "Contadores e displays",
+  "full-adder": "Lógica e memórias", "sr-latch": "Lógica e memórias", thermostat: "Refrigeração e termostatos", fridge: "Refrigeração e termostatos",
+  "traffic-ladder": "Semáforos", "traffic-light": "Semáforos",
+  "tank-level": "Tanques e vazão", "pump-flow": "Tanques e vazão", "two-tanks": "Tanques e vazão", "tank-temperature": "Térmicos", boiler: "Térmicos", "rain-treatment": "Tratamento de água",
+  inventory: "Estoque e filas", queue: "Estoque e filas",
+};
+
+const MORE: Situation[] = [
+  { id: "crossroads", group: "digital", folder: "Semáforos", title: "Semáforo de cruzamento (duas vias)", description: "Quatro temporizadores TON em cadeia dão verde, amarelo e vermelho para as vias A e B, sem nunca liberar as duas ao mesmo tempo.", explore: "Mude T1 e T3 para dar mais verde a uma via.", make: more.crossroads },
+  { id: "ped-button", group: "digital", folder: "Semáforos", title: "Semáforo com botão de pedestre (74123)", description: "O botão dispara o monoestável 74123, que libera o verde dos pedestres por cerca de 10 s e volta ao verde dos veículos.", explore: "Clique na chave do botão durante a simulação. Mude R1 e C1 para trocar o tempo da travessia.", make: more.pedestrianButton },
+  { id: "traffic-138", group: "digital", folder: "Semáforos", title: "Semáforo com 74163 e 74138", description: "O contador 74163 conta de 0 a 7, o decodificador 74138 escolhe o estado e portas NAND acendem os LEDs.", explore: "Mude as entradas das portas NAND para alterar quantos segundos cada cor fica acesa.", make: more.trafficCounterDecoder },
+  { id: "decade-7490", group: "digital", folder: "Contadores e displays", title: "Contador de década 7490 com display", description: "O 7490 conta de 0 a 9 e o display mostra o valor.", explore: "Ligue R01 e R02 em 1 para zerar. Troque o clock para 4 Hz.", make: more.decade7490 },
+  { id: "two-digits", group: "digital", folder: "Contadores e displays", title: "Contador de dois dígitos com 4518", description: "O 4518 duplo conta de 00 a 99. O carry do primeiro contador faz o segundo avançar.", explore: "Observe a dezena subir a cada 10 pulsos.", make: more.twoDigits4518 },
+  { id: "batch-count", group: "digital", folder: "Contadores e displays", title: "Contagem de peças em lote (74163 e 7485)", description: "O 7485 compara a contagem com o tamanho do lote. Ao chegar, acende o LED e zera o contador.", explore: "Mude as chaves B0 a B3 para outro tamanho de lote.", make: more.batchCounter },
+  { id: "johnson", group: "digital", folder: "Registradores e sequenciais", title: "Contador Johnson com 74194", description: "O registrador universal desloca à direita e realimenta o QD invertido, gerando 8 estados.", explore: "Troque S1 S0 para deslocar à esquerda.", make: more.johnson74194 },
+  { id: "sipo-74164", group: "digital", folder: "Registradores e sequenciais", title: "Serial para paralelo com 74164", description: "Um dado serial entra bit a bit e aparece em 8 saídas paralelas.", explore: "Mude a frequência do dado serial e veja o padrão deslizar pelos LEDs.", make: more.serialParallel74164 },
+  { id: "adder-7483", group: "digital", folder: "Aritmética e lógica combinacional", title: "Somador de 4 bits com 7483", description: "Soma A = 5 e B = 3 e mostra o resultado no display, com o vai-um em um LED.", explore: "Mude as chaves para somar 9 + 9 e veja o vai-um acender.", make: more.adder7483 },
+  { id: "cmp-7485", group: "digital", folder: "Aritmética e lógica combinacional", title: "Comparador de magnitude 7485", description: "Compara A com B e acende um entre três LEDs: maior, igual ou menor.", explore: "Deixe A igual a B e veja o LED de igualdade acender.", make: more.comparator7485 },
+  { id: "majority", group: "digital", folder: "Aritmética e lógica combinacional", title: "Função maioria com multiplexador 74151", description: "O 74151 implementa a função maioria de 3 entradas: as entradas de dados D0 a D7 são a tabela-verdade.", explore: "Mude A, B e C e confira a tabela. Altere um D para criar outra função.", make: more.majority74151 },
+  { id: "motor-latch", group: "digital", folder: "Comando e ladder", title: "Partida e parada de motor com selo e TON", description: "Um latch SR faz o selo do botão Liga. Um TON atrasa a partida do motor em 3 s. O Desliga zera tudo.", explore: "Mude o PT do TON e veja o atraso mudar.", make: more.motorLatch },
+  { id: "street-light", group: "digital", folder: "Aplicações de eletrônica", title: "Luz de rua automática", description: "Um comparador com histerese acende a lâmpada quando a luz do ambiente cai abaixo de 30 %.", explore: "Aumente a histerese e veja a lâmpada trocar menos de estado.", make: more.streetLight },
+  { id: "pwm", group: "semi", folder: "Aplicações de eletrônica", title: "PWM e filtro passa-baixa", description: "A razão cíclica é comparada com uma onda triangular. O filtro RC devolve a média, que vale 12 V vezes a razão cíclica.", explore: "Mude a razão cíclica de 0,3 para 0,8 e veja a média subir.", make: more.pwmFilter },
+  { id: "pd-position", group: "control", folder: "Malhas de controle", title: "Posicionamento com controlador PD", description: "Uma carga com atrito e inércia segue uma referência em degrau com um controlador PD.", explore: "Zere o Kd e veja a oscilação aparecer.", make: more.pdPosition },
+  { id: "damping", group: "control", folder: "Respostas de sistemas", title: "Efeito do amortecimento (ζ) na 2ª ordem", description: "O mesmo degrau passa por três sistemas com ζ = 0,2, 0,7 e 1,5.", explore: "Compare a ultrapassagem e o tempo de acomodação das três curvas.", make: more.dampingCompare },
+  { id: "tank-onoff", group: "industry", folder: "Tanques e vazão", title: "Nível de tanque com bomba liga-desliga", description: "Uma chave de nível com histerese liga a bomba abaixo de 0,8 m e desliga acima de 1,2 m.", explore: "Aumente o consumo e veja a bomba ficar mais tempo ligada.", make: more.tankOnOff },
+  { id: "stock-minmax", group: "business", folder: "Estoque e filas", title: "Estoque com ponto de reposição", description: "A reposição liga abaixo de 250 e desliga acima de 350 unidades, enquanto a demanda é constante.", explore: "Aumente a demanda e veja a reposição ficar ligada por mais tempo.", make: more.stockMinMax },
+];
+
+export const SITUATIONS: Situation[] = [...BASE, ...MORE].map((x) => ({ ...x, folder: x.folder ?? FOLDER_OF[x.id] ?? "Outros" }));
+
+
 
 export const SITUATION_GROUPS: { id: SituationGroup; label: string }[] = [
   { id: "control", label: "Controle, filtros e digital" },

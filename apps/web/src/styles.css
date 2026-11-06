@@ -3231,3 +3231,22 @@ th {
     width: 100%;
   }
 }
+
+/* Situações em pastas: nada encolhe dentro da lista */
+.examples > *,
+.examples .lib-block,
+.examples .lib-block-body > * {
+  flex: none;
+}
+.examples .lib-block {
+  margin-top: 0;
+}
+.examples .lib-block-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 8px 10px;
+}
+.examples .lib-fold {
+  margin: 0;
+}
