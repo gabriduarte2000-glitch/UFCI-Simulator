@@ -84,3 +84,9 @@ A aba "Lógica sequencial" projeta contadores e máquinas de estado: você escol
 ## Matemática: dois caminhos
 
 A página abre com duas escolhas. "Da conta para o circuito": sistema contínuo, lógica combinacional ou contador/máquina de estados. "Do circuito para a conta": equações do sistema, ganho e fase, lógica das portas ou máquina de estados lida do quadro. Cada tela diz onde está a resposta. A leitura de máquina de estados aceita flip-flops D, T e JK no mesmo clock, com portas e chaves de entrada, e mostra a tabela de estados, as saídas (Moore ou Mealy) e o diagrama. O botão "Abrir no projetista" leva a tabela para a aba de projeto.
+
+## Petroquímica, Arduino e código
+
+- Biblioteca "Petroquímica e refino": reator CSTR exotérmico, trocador de calor, coluna de destilação, forno de processo e esfera de GLP com PSV, com símbolos animados e 10 situações prontas (inclui uma unidade integrada).
+- CI Arduino Uno (ATmega328P) com datasheet e 6 programas prontos. Não emula o processador AVR.
+- Matemática, "Da conta para o circuito", opção Código: Python, MATLAB/Octave, C, C++, Arduino, Ladder (lista de instruções), Julia, R, JavaScript e equações em texto. Avisa na hora se o código não bate com a linguagem escolhida, reconhece situações e deixa o usuário escolher ou descrever a sua. Python roda no navegador por Pyodide.
