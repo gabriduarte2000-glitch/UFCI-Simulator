@@ -454,6 +454,13 @@ export default function LogicPanel({ active = true, mode = "design" }: { active?
   };
 
   const hasData = started;
+  const handoff = useUi((s) => s.handoff);
+  useEffect(() => {
+    if (mode !== "design" || !handoff || handoff.kind !== "logic") return;
+    setEq(handoff.eq);
+    applyEq(handoff.eq);
+    useUi.getState().setHandoff(null);
+  }, [handoff]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="logic">

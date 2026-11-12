@@ -3354,3 +3354,26 @@ th {
 .flow-dot { animation: flow-dot-move 1.2s linear infinite; }
 @keyframes spin-slow { to { transform: rotate(360deg); } }
 .spin-slow { animation: spin-slow 2s linear infinite; }
+
+/* ------- painel de código da Matemática */
+.code-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.code-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; min-width: 0; }
+.code-card h3 { margin: 0; font-size: 15px; }
+.code-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.code-lang { flex: 1 1 200px; }
+.code-lang select { width: 100%; min-height: 40px; }
+.code-area, .code-custom { width: 100%; box-sizing: border-box; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 14px; line-height: 1.45; resize: vertical; tab-size: 2; white-space: pre; overflow: auto; }
+.code-custom { white-space: pre-wrap; }
+.code-warn { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; background: #fff4d6; border: 1px solid #e6b422; color: #5a4200; font-size: 14px; }
+.code-err { color: #b42318; margin: 0; }
+.code-msg, .code-foot { margin: 0; font-size: 13px; }
+.cand-list { display: flex; flex-direction: column; gap: 8px; }
+.cand { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border, #d0d7e2); border-radius: 8px; cursor: pointer; min-width: 0; }
+.cand.on { border-color: #2f7bf0; background: rgba(47, 123, 240, 0.08); }
+.cand input { margin-top: 4px; flex: none; }
+.cand span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cand em { font-style: normal; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.ladder-pre, .code-out { margin: 0; padding: 10px; overflow: auto; background: #0f1b2d; color: #e6edf7; border-radius: 8px; font-size: 13px; line-height: 1.35; max-height: 320px; }
+.code-card .btn.primary { align-self: flex-start; }
+@media (max-width: 720px) { .code-card .btn.primary { align-self: stretch; } .code-bar .btn { flex: 1 1 40%; min-height: 40px; } }
+.code-warn .btn { background: #fff; color: #1b2a41; border-color: #e6b422; }

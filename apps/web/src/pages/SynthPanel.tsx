@@ -1,6 +1,6 @@
 // Do modelo matemático ao circuito: digita a equação, escolhe a realização e monta no quadro.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   canonicalSS,
   odeTex,
@@ -58,6 +58,18 @@ export default function SynthPanel() {
   const [outName, setOutName] = useState("");
   const [choice, setChoice] = useState<RealizationId>("integrators");
   const [scale, setScale] = useState("");
+  const handoff = useUi((s) => s.handoff);
+  useEffect(() => {
+    if (!handoff || (handoff.kind !== "tf" && handoff.kind !== "ss")) return;
+    if (handoff.kind === "tf") {
+      setMode("eq");
+      setText(handoff.text);
+    } else {
+      setMode("ss");
+      setSs({ A: handoff.A, B: handoff.B, C: handoff.C, D: handoff.D });
+    }
+    useUi.getState().setHandoff(null);
+  }, [handoff]);
 
   const parsed: EqResult = useMemo(
     () => (mode === "eq" ? parseEquation(text, { input: inName.trim() || undefined, output: outName.trim() || undefined }) : parseStateSpace(ss.A, ss.B, ss.C, ss.D)),

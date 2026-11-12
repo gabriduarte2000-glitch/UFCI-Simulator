@@ -31,7 +31,8 @@ export type MathTab =
   | "analise"
   | "frequencia"
   | "logicaCirc"
-  | "estados";
+  | "estados"
+  | "codigo";
 export type RightTab = "props" | "sim";
 
 interface Ui {
@@ -47,6 +48,9 @@ interface Ui {
   dashView: DashView;
   setDashView(v: DashView): void;
   mathTab: MathTab;
+  /** Entrega de um candidato do painel de código a outro painel da Matemática. */
+  handoff: Handoff | null;
+  setHandoff(h: Handoff | null): void;
   seqImport: SeqSpec | null;
   setSeqImport(s: SeqSpec | null): void;
   cloudOpen: boolean;
@@ -67,6 +71,8 @@ interface Ui {
   setChartMode(m: ChartMode): void;
 }
 
+export type Handoff = { kind: "tf"; text: string } | { kind: "ss"; A: string; B: string; C: string; D: string } | { kind: "logic"; eq: string };
+
 export const useUi = create<Ui>((set) => ({
   page: "montagem",
   leftOpen: !isCompact(),
@@ -78,6 +84,8 @@ export const useUi = create<Ui>((set) => ({
   chartSignal: [],
   chartMode: "unit",
   mathTab: "inicio",
+  handoff: null,
+  setHandoff: (handoff) => set({ handoff }),
   seqImport: null,
   setSeqImport: (seqImport) => set({ seqImport }),
   cloudOpen: false,

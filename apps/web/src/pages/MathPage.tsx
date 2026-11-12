@@ -6,6 +6,7 @@ import { useProject } from "../store";
 import { useUi, type MathTab } from "../ui";
 import { Icon } from "../components/Icon";
 import { Tex } from "../components/Tex";
+import CodePanel from "./CodePanel";
 import SynthPanel from "./SynthPanel";
 import FreqPanel from "./FreqPanel";
 import LogicPanel from "./LogicPanel";
@@ -259,6 +260,7 @@ const MODES: Record<Mode, { title: string; sub: string; menu: MathTab; options: 
     options: [
       { tab: "equacao", title: "Sistema contínuo", desc: "Digite a função de transferência H(s) ou as matrizes de estado. O programa monta o diagrama ou o circuito e confere.", answer: "O circuito montado no quadro e a conferência de G(s)." },
       { tab: "logica", title: "Lógica combinacional", desc: "Parta da tabela-verdade ou da equação booleana. O programa reduz com Karnaugh e desenha as portas.", answer: "Equação final (passo 5) e o circuito de portas (passo 6)." },
+      { tab: "codigo", title: "Código", desc: "Escreva ou envie código em Python, MATLAB, C, Arduino, Ladder e outras. O programa reconhece a situação e você escolhe o que simular.", answer: "A lista de situações reconhecidas e a simulação montada no quadro." },
       { tab: "sequencial", title: "Contador ou máquina de estados", desc: "Descreva os estados e para onde cada um vai. O programa acha as equações dos flip-flops e monta o circuito.", answer: "Equações finais (passo 5) e o circuito com flip-flops (passo 6)." },
     ],
   },
@@ -301,7 +303,7 @@ function Landing() {
           <span className="mode-n">1</span>
           <b>{MODES.conta.title}</b>
           <span>{MODES.conta.sub}</span>
-          <em>Sistema contínuo, lógica combinacional ou sequencial</em>
+          <em>Sistema contínuo, lógica, máquina de estados ou código</em>
         </button>
         <button className="mode-card" onClick={() => go("menuCircuito")}>
           <span className="mode-n">2</span>
@@ -403,6 +405,7 @@ export default function MathPage() {
       {tab === "analise" && <AnalysePanel />}
       {tab === "frequencia" && <FreqPanel />}
       {tab === "sequencial" && <SeqPanel />}
+      {tab === "codigo" && <CodePanel />}
       {tab === "estados" && <StatesPanel active />}
       <div hidden={tab !== "logica"} className="logic-wrap">
         <LogicPanel mode="design" />

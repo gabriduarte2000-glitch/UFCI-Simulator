@@ -31,3 +31,4 @@ import "./ics/arduino";
 export * from "./logic";
 export * from "./seq";
 export * from "./fsm";
+export * from "./code";
