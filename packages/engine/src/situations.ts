@@ -8,6 +8,7 @@ import { chirpResonance, digitalPid, noisyFilter, notchDemo, relayOven } from ".
 import { commonEmitter, counterDisplay, dacStaircase, fullAdderGates, halfWaveRectifier, invertingAmp, mosfetSwitch, norLatch, thermostat, timer555Astable, zenerRegulator } from "./situations-semi";
 import { fridgeCompressor, trafficLadder, trafficLight } from "./situations-ics";
 import * as more from "./situations-more";
+import * as petro from "./situations-petro";
 import type { ProjectIR } from "./types";
 
 export type SituationGroup = "control" | "basic" | "industry" | "business" | "mech" | "elec" | "electromech" | "semi" | "digital";
@@ -327,7 +328,20 @@ const MORE: Situation[] = [
   { id: "stock-minmax", group: "business", folder: "Estoque e filas", title: "Estoque com ponto de reposição", description: "A reposição liga abaixo de 250 e desliga acima de 350 unidades, enquanto a demanda é constante.", explore: "Aumente a demanda e veja a reposição ficar ligada por mais tempo.", make: more.stockMinMax },
 ];
 
-export const SITUATIONS: Situation[] = [...BASE, ...MORE].map((x) => ({ ...x, folder: x.folder ?? FOLDER_OF[x.id] ?? "Outros" }));
+const PETRO: Situation[] = [
+  { id: "petro-cstr-open", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR sem controle", description: "Reator de tanque agitado com reação exotérmica A para B e camisa de resfriamento. O ponto de operação (76,9 °C) é instável.", explore: "Mexa na temperatura da camisa em Gráficos. A temperatura do reator foge para outro equilíbrio.", make: petro.cstrOpen },
+  { id: "petro-cstr-runaway", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR: disparo de temperatura", description: "A camisa sobe 5 °C no instante 100 s. A reação acelera, libera mais calor e a temperatura dispara.", explore: "Veja o pico de temperatura e o calor liberado. Depois compare com o reator controlado.", make: petro.cstrRunaway },
+  { id: "petro-cstr-pid", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR com controle PID", description: "Um PID ajusta a temperatura da camisa para segurar o reator em 76,9 °C. A alimentação esquenta no instante 400 s.", explore: "Aumente o ganho Kp e veja a malha oscilar. Diminua e veja a resposta ficar lenta.", make: petro.cstrPid },
+  { id: "petro-hx", group: "industry", folder: "Petroquímica e refino", title: "Trocador de calor casco e tubos", description: "Óleo quente de 150 °C aquece água. Um PID abre a válvula do óleo para manter a água em 100 °C.", explore: "Reduza a vazão fria e veja o controlador fechar a válvula.", make: petro.hxControl },
+  { id: "petro-distill-open", group: "industry", folder: "Petroquímica e refino", title: "Coluna de destilação benzeno e tolueno", description: "Coluna com 10 bandejas. A cor de cada bandeja mostra a fração do componente leve.", explore: "Aumente o refluxo L e veja a pureza do topo subir e a vazão de destilado cair.", make: petro.distillOpen },
+  { id: "petro-distill-ctrl", group: "industry", folder: "Petroquímica e refino", title: "Coluna: controle da pureza do topo", description: "Um PI ajusta o refluxo para manter a pureza do destilado.", explore: "Mude a composição da alimentação e veja o refluxo compensar.", make: petro.distillControl },
+  { id: "petro-furnace", group: "industry", folder: "Petroquímica e refino", title: "Forno de processo", description: "Queimador de gás aquece o fluido que passa pela serpentina. Um PID controla a temperatura de saída.", explore: "A carga sobe no instante 600 s. Veja a chama aumentar.", make: petro.furnacePid },
+  { id: "petro-sphere", group: "industry", folder: "Petroquímica e refino", title: "Esfera de GLP e válvula de alívio", description: "A válvula de saída trava no instante 400 s. A pressão sobe até a PSV abrir em 10 bar.", explore: "Mude o ajuste da PSV e a capacidade. Veja a pressão se estabilizar acima do ajuste.", make: petro.sphereRelief },
+  { id: "petro-esd", group: "industry", folder: "Petroquímica e refino", title: "Intertravamento de nível muito alto", description: "Um latch desliga a bomba de entrada quando o nível passa do limite. O operador precisa rearmar.", explore: "Aumente a vazão de entrada e veja o corte acontecer mais cedo.", make: petro.esdLevel },
+  { id: "petro-integrated", group: "industry", folder: "Petroquímica e refino", title: "Unidade integrada: pré-aquecimento, reator e coluna", description: "A carga é pré-aquecida no trocador, reage no CSTR e a mistura é separada na coluna.", explore: "Mude a temperatura do óleo quente e veja a conversão e a pureza mudarem.", make: petro.integratedUnit },
+];
+
+export const SITUATIONS: Situation[] = [...BASE, ...MORE, ...PETRO].map((x) => ({ ...x, folder: x.folder ?? FOLDER_OF[x.id] ?? "Outros" }));
 
 
 

@@ -41,7 +41,7 @@ export interface BlockImpl {
   discrete?: BlockDiscrete;
 }
 
-export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi" | "icgate" | "icff" | "iccount" | "icreg" | "icmsi" | "ictime";
+export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "petro" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi" | "icgate" | "icff" | "iccount" | "icreg" | "icmsi" | "ictime";
 
 export interface ComponentDef {
   type: string;
@@ -91,6 +91,7 @@ export const CATEGORIES: { id: CategoryId; label: string; group: GroupId; availa
   { id: "discrete", label: "Controle digital (amostrado)", group: "control", available: true },
   { id: "nonlinear", label: "Não linearidades", group: "control", available: true },
   { id: "process", label: "Processos industriais", group: "process", available: true },
+  { id: "petro", label: "Petroquímica e refino", group: "process", available: true },
   { id: "business", label: "Empresarial", group: "process", available: true },
   { id: "mech", label: "Translação", group: "mechanical", available: true },
   { id: "rot", label: "Rotação", group: "mechanical", available: true },

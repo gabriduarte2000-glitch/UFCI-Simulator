@@ -4,6 +4,7 @@
 import { useId } from "react";
 import { getDatasheet, type ParamValue } from "@ufci/engine";
 import { semiArt, semiSize } from "./SymbolsSemi";
+import { petroArt, petroSize } from "./SymbolsPetro";
 
 type Params = Record<string, ParamValue>;
 const num = (p: Params, k: string, d = 0) => {
@@ -148,7 +149,7 @@ export function nodeSize(symbol: string, p: Params): NodeSize {
     default:
       if (isGeneric(symbol)) return genericSize(symbol);
       if (symbol.startsWith("ic:")) return icSize(symbol);
-      return semiSize(symbol, p) ?? { w: 92, h: 56 };
+      return petroSize(symbol, p) ?? semiSize(symbol, p) ?? { w: 92, h: 56 };
   }
 }
 
@@ -857,7 +858,7 @@ export function SymbolArt({ symbol, params, w, h, live }: { symbol: string; para
           </>
         );
       }
-      const art = semiArt(symbol, params, w, h, live);
+      const art = petroArt(symbol, params, w, h, live) ?? semiArt(symbol, params, w, h, live);
       if (art) return <>{art}</>;
       return (
         <>

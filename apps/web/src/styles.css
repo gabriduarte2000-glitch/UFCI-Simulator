@@ -3344,3 +3344,13 @@ th {
 .math-answer-line { margin: 0; padding: 8px 12px; border-left: 3px solid #2fb36b; background: rgba(47, 179, 107, 0.08); border-radius: 6px; font-size: 0.9rem; }
 .math-answer { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 10px 14px; border-left: 3px solid #2fb36b; background: rgba(47, 179, 107, 0.08); border-radius: 6px; }
 @media (max-width: 700px) { .mode-card { min-height: 0; } .math-page .seg { flex-wrap: wrap; } }
+
+@keyframes flame-flick {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  50% { transform: scaleY(0.82) scaleX(1.1); }
+}
+.flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flame-flick 0.5s ease-in-out infinite; }
+@keyframes flow-dot-move { from { transform: translateX(0); opacity: 1; } to { transform: translateX(30px); opacity: 0.2; } }
+.flow-dot { animation: flow-dot-move 1.2s linear infinite; }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 2s linear infinite; }

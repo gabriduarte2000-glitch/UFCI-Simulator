@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import type { SignalMeta } from "@ufci/engine";
 import { useLive } from "./live";
 import { useProject } from "./store";
+import { LIVE_PETRO } from "./components/SymbolsPetro";
 
 /** Saídas que cada símbolo usa para se animar. */
 export const LIVE_PORTS: Record<string, string[]> = {
@@ -20,6 +21,7 @@ export const LIVE_PORTS: Record<string, string[]> = {
   "ic-counter": ["v"],
   "ic-adc": ["v"],
   "ic-cmp": ["y"],
+  ...LIVE_PETRO,
 };
 
 /** Entradas cujo valor ao vivo o símbolo usa (níveis lógicos, comando de chave). */

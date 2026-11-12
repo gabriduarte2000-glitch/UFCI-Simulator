@@ -5,3 +5,4 @@ import "./phys";
 import "./digital";
 import "./semi";
 import "./library2";
+import "./petro";
