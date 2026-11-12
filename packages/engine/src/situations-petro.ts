@@ -258,3 +258,19 @@ export function integratedUnit(): ProjectIR {
 }
 
 export type _W = W;
+
+/** Arduino Uno rodando o programa de semáforo, com três LEDs. */
+export function arduinoTraffic(): ProjectIR {
+  return build(
+    "Arduino: semáforo",
+    [
+      { id: "u", type: "ic.arduino", label: "Arduino Uno", params: { sketch: "traffic", tg: 5, ty: 2, tr: 5 }, pos: [0, 0] },
+      { id: "g", type: "dig.led", label: "LED verde (D10)", params: { color: "green" }, pos: [300, 0] },
+      { id: "y", type: "dig.led", label: "LED amarelo (D11)", params: { color: "yellow" }, pos: [300, 110] },
+      { id: "r", type: "dig.led", label: "LED vermelho (D12)", params: { color: "red" }, pos: [300, 220] },
+      scope("sc", "Saídas D10, D11 e D12", 520, 60),
+    ],
+    [["u", "D10", "g", "a"], ["u", "D11", "y", "a"], ["u", "D12", "r", "a"], ["u", "D10", "sc", "in1"], ["u", "D11", "sc", "in2"], ["u", "D12", "sc", "in3"]],
+    { tf: 40, rtol: 1e-6, atol: 1e-8 },
+  );
+}

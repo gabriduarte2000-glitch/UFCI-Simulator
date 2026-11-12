@@ -329,6 +329,7 @@ const MORE: Situation[] = [
 ];
 
 const PETRO: Situation[] = [
+  { id: "arduino-traffic", group: "digital", folder: "Arduino", title: "Arduino Uno: semáforo", description: "O Arduino roda o programa de semáforo e acende os LEDs verde, amarelo e vermelho nos pinos D10, D11 e D12.", explore: "Mude os tempos do verde, do amarelo e do vermelho no painel de propriedades. Troque o programa por Pisca ou Fade.", make: petro.arduinoTraffic },
   { id: "petro-cstr-open", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR sem controle", description: "Reator de tanque agitado com reação exotérmica A para B e camisa de resfriamento. O ponto de operação (76,9 °C) é instável.", explore: "Mexa na temperatura da camisa em Gráficos. A temperatura do reator foge para outro equilíbrio.", make: petro.cstrOpen },
   { id: "petro-cstr-runaway", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR: disparo de temperatura", description: "A camisa sobe 5 °C no instante 100 s. A reação acelera, libera mais calor e a temperatura dispara.", explore: "Veja o pico de temperatura e o calor liberado. Depois compare com o reator controlado.", make: petro.cstrRunaway },
   { id: "petro-cstr-pid", group: "industry", folder: "Petroquímica e refino", title: "Reator CSTR com controle PID", description: "Um PID ajusta a temperatura da camisa para segurar o reator em 76,9 °C. A alimentação esquenta no instante 400 s.", explore: "Aumente o ganho Kp e veja a malha oscilar. Diminua e veja a resposta ficar lenta.", make: petro.cstrPid },

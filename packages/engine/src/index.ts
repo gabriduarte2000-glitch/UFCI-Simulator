@@ -27,6 +27,7 @@ export type { Datasheet, Pin as ICPin, Scene as ICScene, Item as ICItem, FnTable
 import "./ics/regs";
 import "./ics/msi";
 import "./ics/mono";
+import "./ics/arduino";
 export * from "./logic";
 export * from "./seq";
 export * from "./fsm";

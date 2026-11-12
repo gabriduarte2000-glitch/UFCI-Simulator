@@ -41,7 +41,7 @@ export interface BlockImpl {
   discrete?: BlockDiscrete;
 }
 
-export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "petro" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi" | "icgate" | "icff" | "iccount" | "icreg" | "icmsi" | "ictime";
+export type CategoryId = "sources" | "math" | "mathfn" | "routing" | "control" | "filters" | "discrete" | "nonlinear" | "sinks" | "process" | "petro" | "business" | "notes" | "mech" | "rot" | "elec" | "electromech" | "dgate" | "dseq" | "semi" | "icgate" | "icff" | "iccount" | "icreg" | "icmsi" | "ictime" | "icmcu";
 
 export interface ComponentDef {
   type: string;
@@ -106,6 +106,7 @@ export const CATEGORIES: { id: CategoryId; label: string; group: GroupId; availa
   { id: "icreg", label: "CIs: registradores de deslocamento", group: "digital", available: true },
   { id: "icmsi", label: "CIs: decodificadores, mux, aritmética e display", group: "digital", available: true },
   { id: "ictime", label: "CIs: temporizadores e monoestáveis", group: "digital", available: true },
+  { id: "icmcu", label: "CIs: microcontroladores (Arduino)", group: "digital", available: true },
   { id: "notes", label: "Anotações", group: "other", available: true },
 ];
 
